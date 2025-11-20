@@ -142,35 +142,42 @@ export default function EditDocumentPage() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900">
       {/* Header */}
-      <header className="flex items-center justify-between bg-indigo-800 px-8 py-3 text-white shadow">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="text-xl leading-none">📄</span>
-          <span className="text-lg font-semibold tracking-wide">EDMS</span>
-        </Link>
+      <header className="bg-indigo-800 text-white shadow">
+        <div className="flex h-14 w-full items-stretch">
+          <div className="flex items-stretch">
+            <div className="flex items-center bg-white px-6">
+              <Link href="/" className="flex items-center gap-2 text-indigo-800">
+                <img src="/fti-logo.png" alt="EDMS" className="h-8 w-auto" />
+                <span className="text-lg font-semibold tracking-wide">EDMS</span>
+              </Link>
+            </div>
+            <div className="header-logo-notch h-full w-16 bg-white" />
+          </div>
 
-        <nav className="flex items-center gap-2 text-xs font-medium">
-          <Link
-            href="/"
-            className="rounded-full border border-white/60 bg-white/10 px-4 py-1.5 text-white transition hover:bg-white hover:text-indigo-800"
-          >
-            Home
-          </Link>
-          <Link
-            href="/document"
-            className="rounded-full border border-white/60 bg-white/10 px-4 py-1.5 text-white transition hover:bg-white hover:text-indigo-800"
-          >
-            Document
-          </Link>
-          <Link
-            href="/search"
-            className="rounded-full border border-white/60 bg-white/10 px-4 py-1.5 text-white transition hover:bg-white hover:text-indigo-800"
-          >
-            Search
-          </Link>
-          <span className="rounded-full bg-white px-4 py-1.5 text-indigo-800 shadow-sm">
-            Edit
-          </span>
-        </nav>
+          <nav className="ml-auto flex items-center gap-2 px-8 text-xs font-medium">
+            <Link
+              href="/"
+              className="rounded-full border border-white/60 bg-white/10 px-4 py-1.5 text-white transition hover:bg-white hover:text-indigo-800"
+            >
+              Home
+            </Link>
+            <Link
+              href="/document"
+              className="rounded-full border border-white/60 bg-white/10 px-4 py-1.5 text-white transition hover:bg-white hover:text-indigo-800"
+            >
+              Document
+            </Link>
+            <Link
+              href="/search"
+              className="rounded-full border border-white/60 bg-white/10 px-4 py-1.5 text-white transition hover:bg-white hover:text-indigo-800"
+            >
+              Search
+            </Link>
+            <span className="rounded-full bg-white px-4 py-1.5 text-indigo-800 shadow-sm">
+              Edit
+            </span>
+          </nav>
+        </div>
       </header>
 
       {/* Content */}
@@ -565,9 +572,21 @@ export default function EditDocumentPage() {
       )}
 
       {/* Footer */}
-      <footer className="mt-auto bg-indigo-800 py-3 text-center text-[11px] text-white">
-        <div>© 2025 The Federation of Thai Industries</div>
-        <div>Developed by Kanyarak Rojanalertprasert</div>
+      <footer className="mt-auto bg-indigo-800 py-4 text-[11px] text-white">
+        <div className="mx-auto flex w-full max-w-5xl items-center px-4">
+          <div className="flex items-center">
+            <img
+              src="/fti-logo.png"
+              alt="FTI"
+              className="h-8 w-auto"
+            />
+          </div>
+          <div className="mx-auto flex flex-col items-center text-center text-[11px] leading-snug text-slate-100">
+            <span>© 2025 จัดทำโดย ฝ่ายดิจิทัลและเทคโนโลยีสารสนเทศ สภาอุตสาหกรรมแห่งประเทศไทย</span>
+            <span>จัดทำโดย นางสาวกัลยรักษ์ โรจนเลิศประเสริฐ</span>
+            <span>นิสิตฝึกงาน มหาวิทยาลัยพะเยา</span>
+          </div>
+        </div>
       </footer>
     </div>
   );

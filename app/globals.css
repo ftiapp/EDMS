@@ -24,3 +24,12 @@ body {
   font-family: var(--font-prompt), system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
 }
+
+/* มุมเฉียงของพื้นโลโก้ใน Header */
+.header-logo-notch {
+  /* ตัดเป็นสามเหลี่ยมให้ชิดมุมนั้น */
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+  /* ขยับซ้อนทับพื้นขาวด้านซ้ายเล็กน้อย เพื่อตัดเส้นแบ่งแนวตั้งไม่ให้เห็น */
+  margin-left: -1px;
+}
+
