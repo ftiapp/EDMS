@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900">
+    <div className="flex min-h-screen flex-col bg-white text-slate-900">
       {/* Header */}
       <header className="bg-indigo-800 text-white shadow">
         <div className="flex h-14 w-full items-stretch">
@@ -44,10 +44,10 @@ export default function Home() {
 
       {/* Content */}
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 py-8 pb-16">
-        <section className="w-full max-w-2xl rounded-2xl bnorder border-slate-200 bg-white px-8 py-8 text-center shadow-sm">
-          <div className="mb-5 space-y-2">
-            <h1 className="text-2xl font-semibold text-slate-900">
-              ยินดีต้อนรับสู่ระบบ EDMS
+        <section className="w-full max-w-3xl rounded-2xl border border-indigo-100 bg-white px-8 py-8 text-center shadow-sm">
+          <div className="mb-6 space-y-3">
+            <h1 className="text-3xl font-semibold text-slate-900">
+              ยินดีต้อนรับเข้าสู่ระบบ EDMS
             </h1>
             <p className="text-sm text-slate-600">
               ระบบจัดการเอกสารอิเล็กทรอนิกส์สำหรับการจัดเก็บ ค้นหา และแชร์เอกสารภายในองค์กร
@@ -87,7 +87,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto bg-indigo-800 py-4 text-[11px] text-white">
+      <footer className="mt-auto border-t border-slate-200 bg-white py-4 text-[11px] text-indigo-900">
         <div className="mx-auto flex w-full max-w-5xl items-center px-4">
           {/* โลโก้ใหญ่ ซ้ายสุด */}
           <div className="flex items-center">
@@ -99,7 +99,7 @@ export default function Home() {
           </div>
 
           {/* ข้อความลิขสิทธิ์ อยู่กึ่งกลางแถบ */}
-          <div className="mx-auto flex flex-col items-center text-center text-[11px] leading-snug text-slate-100">
+          <div className="mx-auto flex flex-col items-center text-center text-[11px] leading-snug text-slate-700">
             <span>© 2025 จัดทำโดย ฝ่ายดิจิทัลและเทคโนโลยีสารสนเทศ สภาอุตสาหกรรมแห่งประเทศไทย</span>
             <span>จัดทำโดย นางสาวกัลยรักษ์ โรจนเลิศประเสริฐ</span>
             <span>นิสิตฝึกงาน มหาวิทยาลัยพะเยา</span>

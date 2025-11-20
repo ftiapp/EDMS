@@ -324,7 +324,7 @@ export default function SearchPage() {
       : "";
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900">
+    <div className="flex min-h-screen flex-col bg-white text-slate-900">
       {/* Header */}
       <header className="bg-indigo-800 text-white shadow">
         <div className="flex h-14 w-full items-stretch">
@@ -612,7 +612,7 @@ export default function SearchPage() {
       )}
 
       {/* Footer */}
-      <footer className="mt-auto bg-indigo-800 py-4 text-[11px] text-white">
+      <footer className="mt-auto border-t border-slate-200 bg-white py-4 text-[11px] text-indigo-900">
         <div className="mx-auto flex w-full max-w-5xl items-center px-4">
           <div className="flex items-center">
             <img
@@ -621,7 +621,8 @@ export default function SearchPage() {
               className="h-8 w-auto"
             />
           </div>
-          <div className="mx-auto flex flex-col items-center text-center text-[11px] leading-snug text-slate-100">
+
+          <div className="mx-auto flex flex-col items-center text-center text-[11px] leading-snug text-slate-700">
             <span>© 2025 จัดทำโดย ฝ่ายดิจิทัลและเทคโนโลยีสารสนเทศ สภาอุตสาหกรรมแห่งประเทศไทย</span>
             <span>จัดทำโดย นางสาวกัลยรักษ์ โรจนเลิศประเสริฐ</span>
             <span>นิสิตฝึกงาน มหาวิทยาลัยพะเยา</span>
