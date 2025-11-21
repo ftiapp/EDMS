@@ -212,7 +212,7 @@ export default function EditDocumentPage() {
                 เลือกไฟล์เอกสารใหม่ (ถ้ามีการเปลี่ยนไฟล์)
               </label>
               <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-400 bg-white px-4 py-8 text-center text-slate-500">
-                <span className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 text-slate-700">
+                <span className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 text-indigo-700">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
