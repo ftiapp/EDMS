@@ -20,7 +20,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <div className="flex items-stretch">
             <Link
               href="/admin"
-              className="flex items-center bg-white px-3 sm:px-6"
+              className="flex items-center bg-white pl-3 pr-8 sm:pl-6 sm:pr-10"
             >
               <div className="flex items-center gap-2">
                 {/* FTI logo เหมือนฝั่ง user */}
@@ -129,7 +129,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     <path d="M14 2v6h6" />
                   </svg>
                 </span>
-                <span>All Documents</span>
+                <span>Documents</span>
               </Link>
             </nav>
           </div>

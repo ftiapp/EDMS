@@ -44,6 +44,7 @@ export default function DocumentUploadPage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showConfirmUpload, setShowConfirmUpload] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   function getLocalDateString() {
     const now = new Date();
@@ -132,7 +133,7 @@ export default function DocumentUploadPage() {
       setMessage("🎉 อัปโหลดเอกสารเรียบร้อยแล้ว!");
       form.reset();
       setSelectedFiles([]);
-      router.push("/search");
+      setShowSuccessModal(true);
     } catch (err) {
       setIsSuccess(false);
       setMessage("ไม่สามารถอัปโหลดเอกสารได้ กรุณาลองใหม่อีกครั้ง");
@@ -503,7 +504,7 @@ export default function DocumentUploadPage() {
               />
             </div>
 
-            {message && (
+            {message && !isSuccess && (
               <div className="fixed inset-x-0 top-16 z-50 flex justify-center px-4">
                 <div
                   className={`flex max-w-md items-center gap-2 rounded-full border px-4 py-2 text-[11px] shadow-lg ${
@@ -625,6 +626,67 @@ export default function DocumentUploadPage() {
           </form>
         </section>
       </main>
+
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 text-xs text-slate-800 shadow-lg">
+            <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-emerald-700">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  className="h-3 w-3"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+              </span>
+              <span>อัปโหลดเอกสารเรียบร้อยแล้ว</span>
+            </h2>
+            <p className="mb-4 text-[11px] text-slate-600">
+              คุณต้องการไปที่หน้ารวมเอกสารเพื่อดูรายการทั้งหมดหรือไม่?
+            </p>
+            <div className="flex justify-end gap-2 text-[11px]">
+              <button
+                type="button"
+                onClick={() => setShowSuccessModal(false)}
+                className="rounded-full bg-slate-200 px-4 py-1.5 text-slate-700 hover:bg-slate-300"
+              >
+                ปิดหน้าต่างนี้
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  router.push("/search");
+                }}
+                className="flex items-center gap-1.5 rounded-full bg-emerald-600 px-4 py-1.5 text-white shadow hover:bg-emerald-700"
+              >
+                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/20">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    className="h-3 w-3"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
+                  </svg>
+                </span>
+                <span>ไปที่หน้ารวมเอกสาร</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirm upload modal */}
       {showConfirmUpload && (

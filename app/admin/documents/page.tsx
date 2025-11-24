@@ -21,6 +21,11 @@ export default function AdminDocumentsPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [savingId, setSavingId] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [globalLoadingMessage, setGlobalLoadingMessage] = useState<string | null>(
+    null
+  );
+  const [successBanner, setSuccessBanner] = useState<string | null>(null);
   const [confirmDeleteDoc, setConfirmDeleteDoc] = useState<DbDocument | null>(
     null
   );
@@ -93,6 +98,14 @@ export default function AdminDocumentsPage() {
   };
 
   useEffect(() => {
+    if (!successBanner) return;
+    const timer = setTimeout(() => {
+      setSuccessBanner(null);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [successBanner]);
+
+  useEffect(() => {
     async function fetchAll() {
       try {
         setIsLoading(true);
@@ -121,6 +134,7 @@ export default function AdminDocumentsPage() {
       access_level: (doc.access_level || "private").toString(),
     });
     setActionError(null);
+    setActionSuccess(null);
     setSelectedFiles([]);
   };
 
@@ -153,6 +167,8 @@ export default function AdminDocumentsPage() {
     try {
       setSavingId(id);
       setActionError(null);
+      setActionSuccess(null);
+      setGlobalLoadingMessage("กำลังบันทึกการแก้ไขเอกสาร โปรดรอสักครู่...");
 
       // ถ้ามีไฟล์ใหม่ ให้เรียกอัปเดตไฟล์แนบก่อน
       if (selectedFiles.length > 0) {
@@ -186,11 +202,14 @@ export default function AdminDocumentsPage() {
       );
       setEditingId(null);
       setSelectedFiles([]);
+      setActionSuccess("บันทึกการแก้ไขเสร็จสิ้น");
+      setSuccessBanner("บันทึกการแก้ไขเอกสารเรียบร้อยแล้ว");
     } catch (err) {
       console.error("Admin update document error", err);
       setActionError("ไม่สามารถบันทึกการแก้ไขเอกสารได้");
     } finally {
       setSavingId(null);
+      setGlobalLoadingMessage(null);
     }
   };
 
@@ -198,16 +217,21 @@ export default function AdminDocumentsPage() {
     try {
       setSavingId(id);
       setActionError(null);
+      setActionSuccess(null);
+      setGlobalLoadingMessage("กำลังลบเอกสาร โปรดรอสักครู่...");
       const res = await fetch(`/api/documents?id=${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete document");
 
       setDocuments((prev) => prev.filter((doc) => doc.id !== id));
       setConfirmDeleteDoc(null);
+      setActionSuccess("ลบเอกสารเสร็จสิ้น");
+      setSuccessBanner("ลบเอกสารเรียบร้อยแล้ว");
     } catch (err) {
       console.error("Admin delete document error", err);
       setActionError("ไม่สามารถลบเอกสารได้");
     } finally {
       setSavingId(null);
+      setGlobalLoadingMessage(null);
     }
   };
 
@@ -243,6 +267,52 @@ export default function AdminDocumentsPage() {
 
   return (
     <div className="space-y-4">
+      {globalLoadingMessage && (
+        <div className="fixed inset-x-0 top-4 z-40 flex justify-center px-4">
+          <div className="flex max-w-md items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-[11px] text-white shadow-lg">
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/20 animate-pulse">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className="h-3 w-3 text-white"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 3v12" />
+                <path d="M8 7l4-4 4 4" />
+                <rect x="4" y="15" width="16" height="4" rx="1" />
+              </svg>
+            </span>
+            <span>{globalLoadingMessage}</span>
+          </div>
+        </div>
+      )}
+
+      {successBanner && (
+        <div className="fixed inset-x-0 top-16 z-40 flex justify-center px-4">
+          <div className="flex max-w-md items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-[11px] text-emerald-700 shadow-lg">
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/80">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className="h-3 w-3 text-emerald-600"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+            </span>
+            <span>{successBanner}</span>
+          </div>
+        </div>
+      )}
+
       <section className="space-y-1">
         <h1 className="text-lg font-semibold text-slate-900">
           จัดการเอกสารทั้งหมด
@@ -543,10 +613,30 @@ export default function AdminDocumentsPage() {
                       <button
                         type="button"
                         onClick={() => handleSave(doc.id)}
-                        className="rounded-full bg-indigo-600 px-3 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-4 py-1.5 text-[10px] font-semibold text-white shadow-sm hover:bg-emerald-600 disabled:opacity-60"
                         disabled={savingId === doc.id}
                       >
-                        {savingId === doc.id ? "กำลังบันทึก..." : "บันทึกการแก้ไข"}
+                        <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/15">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            className="h-3 w-3"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+                            <polyline points="7 9 12 14 17 9" />
+                            <line x1="12" y1="14" x2="12" y2="3" />
+                          </svg>
+                        </span>
+                        <span>
+                          {savingId === doc.id
+                            ? "กำลังบันทึกเอกสาร โปรดรอสักครู่..."
+                            : "บันทึกการแก้ไข"}
+                        </span>
                       </button>
                     </div>
                   </div>
