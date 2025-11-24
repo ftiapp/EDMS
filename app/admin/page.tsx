@@ -446,7 +446,32 @@ export default function AdminDashboardPage() {
     };
   }, [documents, now]);
 
-  // เตรียมข้อมูลสำหรับกราฟโดนัทของชนิดไฟล์
+  const accessDonutData = useMemo(() => {
+    if (!accessSummary.length) return null;
+
+    const labels = accessSummary.map((item) => item.label);
+    const data = accessSummary.map((item) => item.count);
+
+    const backgroundColor = [
+      "#fb923c", // orange
+      "#0ea5e9", // sky
+      "#22c55e", // emerald
+    ];
+
+    return {
+      labels,
+      datasets: [
+        {
+          data,
+          backgroundColor,
+          borderColor: backgroundColor,
+          borderWidth: 2,
+          hoverOffset: 6,
+        },
+      ],
+    };
+  }, [accessSummary]);
+
   const extDonutData = useMemo(() => {
     if (!extSummary.length) {
       return null;
@@ -671,56 +696,44 @@ export default function AdminDashboardPage() {
               <div className="mb-2 flex items-center justify-between">
                 <span className="font-semibold text-slate-800">จำนวนเอกสารตามระดับการแชร์</span>
               </div>
-              <ul className="space-y-2">
-                {accessSummary.map((item) => {
-                  const ratio = maxAccessCount > 0 ? item.count / maxAccessCount : 0;
-                  const widthPercent = `${Math.max(10, ratio * 100)}%`;
 
-                  // สีตามตัวอย่าง: ส่วนตัว = ส้ม, team = ฟ้า, public = เขียว
-                  const barColor =
-                    item.key === "private"
-                      ? "bg-orange-400"
-                      : item.key === "team"
-                      ? "bg-sky-500"
-                      : "bg-emerald-500";
+              {!accessDonutData ? (
+                <p className="text-[11px] text-slate-500">ยังไม่มีข้อมูลเอกสาร</p>
+              ) : (
+                <div className="flex min-h-[200px] flex-col items-center justify-center gap-4 md:min-h-[220px]">
+                  <div className="flex h-40 w-40 items-center justify-center md:h-44 md:w-44">
+                    <Doughnut data={accessDonutData} options={extDonutOptions} />
+                  </div>
 
-                  const containerColor =
-                    item.key === "private"
-                      ? "bg-orange-50"
-                      : item.key === "team"
-                      ? "bg-sky-50"
-                      : "bg-emerald-50";
+                  <ul className="w-full max-w-xs space-y-1">
+                    {accessSummary.map((item) => {
+                      const colorClass =
+                        item.key === "private"
+                          ? "bg-orange-500"
+                          : item.key === "team"
+                          ? "bg-sky-500"
+                          : "bg-emerald-500";
 
-                  const countTextColor =
-                    item.key === "private"
-                      ? "text-orange-600"
-                      : item.key === "team"
-                      ? "text-sky-700"
-                      : "text-emerald-700";
-
-                  return (
-                    <li
-                      key={item.key}
-                      className={`space-y-1 rounded-md px-3 py-2 text-slate-900 ${containerColor}`}
-                    >
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="truncate pr-2">{item.label}</span>
-                        <span
-                          className={`whitespace-nowrap font-semibold ${countTextColor}`}
+                      return (
+                        <li
+                          key={item.key}
+                          className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-1.5"
                         >
-                          {item.count.toLocaleString()} ไฟล์
-                        </span>
-                      </div>
-                      <div className="mt-1 h-1.5 w-full rounded-full bg-white/60">
-                        <div
-                          className={`h-1.5 rounded-full ${barColor}`}
-                          style={{ width: widthPercent }}
-                        />
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+                          <div className="flex items-center gap-2">
+                            <span className={`h-2.5 w-2.5 rounded-full ${colorClass}`} />
+                            <span className="text-[11px] text-slate-800">
+                              {item.label}
+                            </span>
+                          </div>
+                          <span className="text-[11px] font-semibold text-slate-900">
+                            {item.count.toLocaleString()} ไฟล์
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
             </div>
           </section>
 
