@@ -29,11 +29,11 @@ export default function UserNavbar() {
           <div className="header-logo-notch h-full w-12 bg-white sm:w-16" />
         </div>
 
-        <nav className="ml-auto flex items-center gap-1 rounded-full bg-indigo-900/30 px-1 py-1 text-[10px] font-medium sm:gap-2 sm:bg-transparent sm:px-8 sm:py-0 sm:text-xs">
+        <nav className="ml-auto flex items-center gap-1 rounded-full bg-indigo-900/30 px-1 py-1 text-[11px] font-medium sm:gap-2 sm:bg-transparent sm:px-8 sm:py-0">
           <Link
             href="/"
             className={
-              "rounded-full px-3 py-1.5 sm:px-4 transition " +
+              "inline-flex items-center gap-1 rounded-full px-3 py-1.5 sm:px-4 transition " +
               (isHome
                 ? "bg-white text-indigo-800 shadow-sm"
                 : "border border-white/60 bg-white/10 text-white hover:bg-white hover:text-indigo-800")

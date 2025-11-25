@@ -29,7 +29,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   alt="FTI"
                   className="h-7 w-auto sm:h-8"
                 />
-                <span className="text-base font-semibold tracking-wide text-slate-800 sm:text-lg">
+                <span className="text-base font-semibold tracking-wide text-amber-600 sm:text-lg">
                   EDMS
                 </span>
               </div>
