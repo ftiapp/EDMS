@@ -258,19 +258,21 @@ export default function AdminTrashPage() {
                       className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-emerald-600 px-4 py-1.5 text-[10px] font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60"
                       disabled={restoringId === doc.id}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        className="h-3.5 w-3.5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M3 12a9 9 0 1 1 9 9" />
-                        <path d="M3 4v8h8" />
-                      </svg>
+                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          className="h-2.5 w-2.5 text-emerald-600"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M3 12a9 9 0 1 1 9 9" />
+                          <path d="M3 4v8h8" />
+                        </svg>
+                      </span>
                       <span>
                         {restoringId === doc.id ? "กำลังกู้คืน..." : "กู้คืนเอกสาร"}
                       </span>

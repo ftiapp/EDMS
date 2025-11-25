@@ -24,11 +24,11 @@ export default function Home() {
               href="/document"
               className="flex items-center gap-2 rounded-full bg-emerald-600 px-8 py-2.5 text-white shadow hover:bg-emerald-700"
             >
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
-                  className="h-4 w-4 text-white"
+                  className="h-4 w-4 text-emerald-600"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
@@ -46,11 +46,11 @@ export default function Home() {
               href="/search"
               className="flex items-center gap-2 rounded-full bg-indigo-700 px-8 py-2.5 text-white shadow hover:bg-indigo-800"
             >
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
-                  className="h-4 w-4 text-white"
+                  className="h-4 w-4 text-indigo-600"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
@@ -67,11 +67,11 @@ export default function Home() {
               href="/search"
               className="flex items-center gap-2 rounded-full bg-slate-700 px-8 py-2.5 text-white shadow hover:bg-slate-800"
             >
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
-                  className="h-4 w-4 text-white"
+                  className="h-4 w-4 text-slate-700"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"

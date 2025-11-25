@@ -466,11 +466,11 @@ export default function AdminDocumentsPage() {
                       className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-3 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-emerald-600 disabled:opacity-60"
                       disabled={savingId !== null && savingId !== doc.id}
                     >
-                      <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/15">
+                      <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 24 24"
-                          className="h-3 w-3"
+                          className="h-2.5 w-2.5 text-emerald-600"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2"
@@ -489,11 +489,11 @@ export default function AdminDocumentsPage() {
                       className="inline-flex items-center gap-1 rounded-full bg-rose-500 px-3 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-rose-600 disabled:opacity-60"
                       disabled={savingId === doc.id}
                     >
-                      <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/15">
+                      <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 24 24"
-                          className="h-3 w-3"
+                          className="h-2.5 w-2.5 text-rose-600"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="2"

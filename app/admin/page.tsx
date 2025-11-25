@@ -52,6 +52,7 @@ export default function AdminDashboardPage() {
   const [documents, setDocuments] = useState<DbDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [trashCount, setTrashCount] = useState(0);
 
   const [editingDocId, setEditingDocId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({
@@ -134,6 +135,18 @@ export default function AdminDashboardPage() {
         const data = await res.json();
         const dbDocs = (data.documents || []) as DbDocument[];
         setDocuments(dbDocs);
+
+        // นับจำนวนเอกสารในถังขยะ (is_deleted = 1)
+        try {
+          const trashRes = await fetch("/api/documents/trash");
+          if (trashRes.ok) {
+            const trashData = await trashRes.json();
+            const trashDocs = (trashData.documents || []) as DbDocument[];
+            setTrashCount(trashDocs.length);
+          }
+        } catch (e) {
+          console.error("Admin dashboard fetch trash error", e);
+        }
       } catch (err) {
         console.error("Admin dashboard fetch error", err);
         setError("ไม่สามารถดึงข้อมูลเอกสารได้");
@@ -596,7 +609,7 @@ export default function AdminDashboardPage() {
       {!isLoading && !error && (
         <>
           {/* Summary cards */}
-          <section className="grid grid-cols-1 gap-3 md:grid-cols-4">
+          <section className="grid grid-cols-1 gap-3 md:grid-cols-5">
             <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-[11px] shadow-sm">
               <div className="text-[11px] text-slate-500">เอกสารทั้งหมด</div>
               <div className="mt-1 text-2xl font-semibold text-indigo-700">
@@ -604,7 +617,7 @@ export default function AdminDashboardPage() {
               </div>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-[11px] shadow-sm">
-              <div className="text-[11px] text-slate-500">จำนวนฝ่าย/สถาบัน</div>
+              <div className="text-[11px] text-slate-500">จำนวนฝ่าย/สถาบันในระบบ</div>
               <div className="mt-1 text-2xl font-semibold text-amber-700">
                 {totalDepartments.toLocaleString()}
               </div>
@@ -619,6 +632,12 @@ export default function AdminDashboardPage() {
               <div className="text-[11px] text-slate-500">เอกสารถูกแก้ไขใน 7 วันที่ผ่านมา</div>
               <div className="mt-1 text-2xl font-semibold text-violet-700">
                 {recentEdited.toLocaleString()}
+              </div>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-[11px] shadow-sm">
+              <div className="text-[11px] text-slate-500">เอกสารในถังขยะ</div>
+              <div className="mt-1 text-2xl font-semibold text-rose-700">
+                {trashCount.toLocaleString()}
               </div>
             </div>
           </section>
@@ -852,11 +871,11 @@ export default function AdminDashboardPage() {
                                 className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-emerald-600 disabled:opacity-60"
                                 disabled={savingDocId !== null && savingDocId !== doc.id}
                               >
-                                <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/15">
+                                <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white">
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 24 24"
-                                    className="h-3 w-3"
+                                    className="h-2.5 w-2.5 text-emerald-600"
                                     fill="none"
                                     stroke="currentColor"
                                     strokeWidth="2"
@@ -875,11 +894,11 @@ export default function AdminDashboardPage() {
                                 className="inline-flex items-center gap-1 rounded-full bg-rose-500 px-2 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-rose-600 disabled:opacity-60"
                                 disabled={savingDocId !== null}
                               >
-                                <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/15">
+                                <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white">
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 24 24"
-                                    className="h-3 w-3"
+                                    className="h-2.5 w-2.5 text-rose-600"
                                     fill="none"
                                     stroke="currentColor"
                                     strokeWidth="2"
