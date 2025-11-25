@@ -975,12 +975,30 @@ export default function AdminDashboardPage() {
                               <button
                                 type="button"
                                 onClick={() => handleSaveEdit(doc.id)}
-                                className="rounded-full bg-indigo-600 px-3 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60"
+                                className="inline-flex items-center gap-1.5 rounded-full bg-indigo-600 px-3 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60"
                                 disabled={savingDocId === doc.id}
                               >
-                                {savingDocId === doc.id
-                                  ? "กำลังบันทึก..."
-                                  : "บันทึกการแก้ไข"}
+                                <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    className="h-2.5 w-2.5 text-indigo-600"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+                                    <polyline points="7 9 12 14 17 9" />
+                                    <line x1="12" y1="14" x2="12" y2="3" />
+                                  </svg>
+                                </span>
+                                <span>
+                                  {savingDocId === doc.id
+                                    ? "กำลังบันทึก..."
+                                    : "บันทึกการแก้ไข"}
+                                </span>
                               </button>
                             </div>
                           </div>
