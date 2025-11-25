@@ -19,6 +19,7 @@ export default function AdminTrashPage() {
   const [restoringId, setRestoringId] = useState<number | null>(null);
   const [searchInput, setSearchInput] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [successBanner, setSuccessBanner] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchTrash() {
@@ -39,6 +40,14 @@ export default function AdminTrashPage() {
 
     fetchTrash();
   }, []);
+
+  useEffect(() => {
+    if (!successBanner) return;
+    const timer = setTimeout(() => {
+      setSuccessBanner(null);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [successBanner]);
 
   const q = searchInput.toLowerCase().trim();
   const filteredDocs = documents.filter((doc) => {
@@ -82,6 +91,7 @@ export default function AdminTrashPage() {
       }
 
       setDocuments((prev) => prev.filter((doc) => doc.id !== id));
+      setSuccessBanner("กู้คืนเอกสารเรียบร้อยแล้ว");
     } catch (err) {
       console.error("Admin restore document error", err);
       setError("ไม่สามารถกู้คืนเอกสารได้");
@@ -92,6 +102,28 @@ export default function AdminTrashPage() {
 
   return (
     <div className="space-y-4">
+      {successBanner && (
+        <div className="fixed inset-x-0 top-16 z-40 flex justify-center px-4">
+          <div className="flex max-w-md items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-[11px] text-emerald-700 shadow-lg">
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/80">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className="h-3 w-3 text-emerald-600"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+            </span>
+            <span>{successBanner}</span>
+          </div>
+        </div>
+      )}
+
       <section className="space-y-1">
         <h1 className="text-lg font-semibold text-slate-900">
           ถังขยะเอกสาร (Trash)

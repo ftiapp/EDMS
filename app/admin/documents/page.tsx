@@ -33,6 +33,7 @@ export default function AdminDocumentsPage() {
     title: "",
     department: "",
     access_level: "private",
+    description: "",
   });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [searchInput, setSearchInput] = useState("");
@@ -132,6 +133,7 @@ export default function AdminDocumentsPage() {
       title: doc.title || "",
       department: doc.department || "",
       access_level: (doc.access_level || "private").toString(),
+      description: doc.description || "",
     });
     setActionError(null);
     setActionSuccess(null);
@@ -145,7 +147,7 @@ export default function AdminDocumentsPage() {
   };
 
   const handleChange = (
-    field: "title" | "department" | "access_level",
+    field: "title" | "department" | "access_level" | "description",
     value: string
   ) => {
     setEditForm((prev) => ({
@@ -158,6 +160,7 @@ export default function AdminDocumentsPage() {
     const title = editForm.title.trim();
     const department = editForm.department.trim();
     const access_level = editForm.access_level.trim();
+    const description = editForm.description.trim();
 
     if (!title || !department) {
       setActionError("กรุณากรอกชื่อเรื่องและฝ่าย/สถาบันให้ครบถ้วน");
@@ -189,14 +192,14 @@ export default function AdminDocumentsPage() {
       const res = await fetch(`/api/documents?id=${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, department, access_level }),
+        body: JSON.stringify({ title, department, access_level, description }),
       });
       if (!res.ok) throw new Error("Failed to update document");
 
       setDocuments((prev) =>
         prev.map((doc) =>
           doc.id === id
-            ? { ...doc, title, department, access_level }
+            ? { ...doc, title, department, access_level, description }
             : doc
         )
       );
@@ -552,6 +555,23 @@ export default function AdminDocumentsPage() {
                       </div>
                     </div>
 
+                    <div className="mt-2 rounded-xl border border-indigo-100 bg-white/80 p-2 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-semibold text-slate-800">
+                          คำอธิบายเอกสาร
+                        </label>
+                        <span className="text-[9px] text-slate-400">
+                          อธิบายรายละเอียดหรือบริบทของเอกสารเพิ่มเติม
+                        </span>
+                      </div>
+                      <textarea
+                        className="min-h-[56px] w-full rounded-lg border border-slate-200 bg-indigo-50/40 px-2 py-1.5 text-[10px] text-slate-800 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-300"
+                        value={editForm.description}
+                        onChange={(e) => handleChange("description", e.target.value)}
+                        placeholder="เช่น วัตถุประสงค์ของเอกสาร เนื้อหาสำคัญ หรือข้อควรระวังในการใช้งาน"
+                      />
+                    </div>
+
                     <div className="mt-2 space-y-1">
                       <label className="text-[10px] font-semibold text-slate-700">
                         เลือกไฟล์เอกสารใหม่ (ถ้ามีการเปลี่ยนไฟล์)
@@ -589,15 +609,126 @@ export default function AdminDocumentsPage() {
                             return;
                           }
 
+                          // ตั้งค่าไฟล์ใหม่ (แทนชุดเดิม) สำหรับการอัปเดตไฟล์แนบ
                           setSelectedFiles(allowed);
                           e.target.value = "";
                         }}
                       />
 
                       {selectedFiles.length > 0 && (
-                        <p className="text-[9px] text-slate-600">
-                          เลือกไฟล์ใหม่แล้ว {selectedFiles.length} ไฟล์ ระบบจะอัปเดตไฟล์แนบเดิมเมื่อกด "บันทึกการแก้ไข"
-                        </p>
+                        <div className="mt-1 space-y-1 text-[9px] text-slate-600">
+                          <div className="flex items-center justify-between">
+                            <p>
+                              เลือกไฟล์ใหม่แล้ว {selectedFiles.length} ไฟล์ ระบบจะอัปเดตไฟล์แนบเดิมเมื่อกด
+                              {" "}
+                              <span className="font-semibold">"บันทึกการแก้ไข"</span>
+                            </p>
+                            <button
+                              type="button"
+                              className="ml-2 rounded-full border border-slate-300 bg-white px-2 py-0.5 text-[9px] font-medium text-slate-600 hover:bg-slate-100"
+                              onClick={() => setSelectedFiles([])}
+                            >
+                              ลบไฟล์ใหม่ทั้งหมด
+                            </button>
+                          </div>
+
+                          <div className="max-h-24 space-y-1 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 px-2 py-1">
+                            {selectedFiles.map((file, index) => {
+                              const sizeKb = Math.max(1, Math.round(file.size / 1024));
+                              const ext = file.name.split(".").pop()?.toLowerCase() || "";
+                              const isImage = ["jpg", "jpeg", "png"].includes(ext);
+
+                              return (
+                                <div
+                                  key={index}
+                                  className="flex items-center justify-between gap-2 rounded-md bg-white px-2 py-1 shadow-sm"
+                                >
+                                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                                    <div className="flex h-5 w-5 items-center justify-center rounded-md bg-slate-100 text-[9px] text-slate-700">
+                                      {isImage ? (
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          viewBox="0 0 24 24"
+                                          className="h-3 w-3"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <rect x="3" y="3" width="18" height="18" rx="2" />
+                                          <circle cx="8.5" cy="8.5" r="1.5" />
+                                          <path d="M21 15l-5-5L5 21" />
+                                        </svg>
+                                      ) : ext === "pdf" ? (
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          viewBox="0 0 24 24"
+                                          className="h-3 w-3"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
+                                          <path d="M14 2v6h6" />
+                                        </svg>
+                                      ) : (
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          viewBox="0 0 24 24"
+                                          className="h-3 w-3"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <path d="M4 4h16v16H4z" />
+                                          <path d="M4 9h16" />
+                                        </svg>
+                                      )}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="truncate text-[9px] font-medium text-slate-800">
+                                        {file.name}
+                                      </div>
+                                      <div className="text-[9px] text-slate-500">
+                                        {ext ? ext.toUpperCase() : ""}
+                                        {ext && " · "}
+                                        {sizeKb.toLocaleString()} KB
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="ml-2 flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 text-[9px] text-slate-700 hover:bg-slate-300"
+                                    onClick={() => {
+                                      setSelectedFiles((prev) =>
+                                        prev.filter((_, i) => i !== index)
+                                      );
+                                    }}
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      viewBox="0 0 24 24"
+                                      className="h-3 w-3"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <path d="M18 6 6 18" />
+                                      <path d="M6 6l12 12" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                       )}
                     </div>
 
@@ -605,10 +736,25 @@ export default function AdminDocumentsPage() {
                       <button
                         type="button"
                         onClick={cancelEdit}
-                        className="rounded-full border border-slate-300 bg-white px-3 py-1 text-[10px] font-medium text-slate-700 hover:bg-white"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-1 text-[10px] font-medium text-slate-700 hover:bg-slate-50"
                         disabled={savingId === doc.id}
                       >
-                        ยกเลิก
+                        <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-slate-100 text-[10px] text-slate-600">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            className="h-3 w-3"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M18 6 6 18" />
+                            <path d="M6 6l12 12" />
+                          </svg>
+                        </span>
+                        <span>ยกเลิก</span>
                       </button>
                       <button
                         type="button"
