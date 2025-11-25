@@ -17,8 +17,7 @@ export async function POST(request: Request) {
     const db = getDb();
     await db.execute(
       `UPDATE edms_documents
-       SET is_deleted = 0,
-           edited_at = NOW()
+       SET is_deleted = 0
        WHERE id = ?`,
       [Number(id)]
     );
