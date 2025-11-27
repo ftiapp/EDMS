@@ -156,7 +156,7 @@ export default function AdminDocumentsPage() {
     }));
   };
 
-  const handleSave = async (id: number) => {
+  const handleSave = async (id: number, tags: string | null) => {
     const title = editForm.title.trim();
     const department = editForm.department.trim();
     const access_level = editForm.access_level.trim();
@@ -192,7 +192,7 @@ export default function AdminDocumentsPage() {
       const res = await fetch(`/api/documents?id=${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, department, access_level, description }),
+        body: JSON.stringify({ title, department, access_level, description, tags }),
       });
       if (!res.ok) throw new Error("Failed to update document");
 
@@ -758,7 +758,7 @@ export default function AdminDocumentsPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleSave(doc.id)}
+                        onClick={() => handleSave(doc.id, doc.tags)}
                         className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-4 py-1.5 text-[10px] font-semibold text-white shadow-sm hover:bg-emerald-600 disabled:opacity-60"
                         disabled={savingId === doc.id}
                       >
