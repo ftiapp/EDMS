@@ -485,6 +485,29 @@ export default function AdminDocumentsPage() {
                     </button>
                     <button
                       type="button"
+                      onClick={() => window.open(`/admin/detail?id=${doc.id}`, "_blank")}
+                      className="inline-flex items-center gap-1 rounded-full bg-indigo-500 px-3 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-indigo-600 disabled:opacity-60"
+                      title="ดูรายละเอียดเอกสารในหน้าแอดมิน"
+                    >
+                      <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/90">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          className="h-2.5 w-2.5 text-indigo-600"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M2 12s3-7.5 10-7.5 10 7.5 10 7.5-3 7.5-10 7.5-10-7.5-10-7.5z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      </span>
+                      <span>ดูเอกสาร</span>
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setConfirmDeleteDoc(doc)}
                       className="inline-flex items-center gap-1 rounded-full bg-rose-500 px-3 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-rose-600 disabled:opacity-60"
                       disabled={savingId === doc.id}
