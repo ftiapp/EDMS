@@ -83,7 +83,7 @@ export default function UserNavbar() {
                   <path d="M14 2v6h6" />
                 </svg>
               </span>
-              <span>Document</span>
+              <span>Upload</span>
             </span>
           </Link>
           <Link
