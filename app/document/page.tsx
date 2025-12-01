@@ -76,7 +76,6 @@ export default function DocumentUploadPage() {
     setCurrentDateTimeThai(getThaiDateTimeString());
   }, []);
 
-  // ให้ข้อความแจ้งเตือนหายไปเองภายใน 5 วินาที
   useEffect(() => {
     if (!message) return;
     const timer = setTimeout(() => {
@@ -109,7 +108,7 @@ export default function DocumentUploadPage() {
       return;
     }
 
-    // ถ้าไม่ได้กรอกวันที่เพิ่ม ให้ใช้วันที่ปัจจุบันอัตโนมัติ
+    // ให้ใช้วันที่ปัจจุบันอัตโนมัติ
     const createdAt = formData.get("createdAt");
     if (!createdAt) {
       // กรณีสำรอง: ถ้าไม่มีค่าในฟอร์ม ให้ใช้วันที่ปัจจุบัน (เวลาท้องถิ่น)

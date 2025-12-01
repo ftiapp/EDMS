@@ -270,7 +270,6 @@ export default function EditDocumentPage() {
                       return;
                     }
 
-                    // เพิ่มไฟล์ใหม่ต่อจากรายการเดิมเหมือนหน้าอัปโหลด
                     setSelectedFiles((prev) => [...prev, ...allowedFiles]);
                     // เคลียร์ input เพื่อให้เลือกไฟล์ชุดเดิมซ้ำได้
                     e.target.value = "";

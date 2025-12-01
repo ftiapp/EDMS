@@ -100,7 +100,7 @@ export default function Home() {
             />
           </div>
 
-          {/* ข้อความลิขสิทธิ์ อยู่กึ่งกลางแถบ */}
+          
           <div className="mx-auto flex flex-col items-center text-center text-[11px] leading-snug text-slate-700">
             <span>© 2025 จัดทำโดย ฝ่ายดิจิทัลและเทคโนโลยี สภาอุตสาหกรรมแห่งประเทศไทย</span>
             <span>จัดทำโดย นางสาวกัลยรักษ์ โรจนเลิศประเสริฐ</span>
