@@ -114,6 +114,48 @@ export default function SearchPage() {
     }
   }
 
+  // แปลงวันที่/เวลาจากฐานข้อมูลให้เป็นวันที่แบบท้องถิ่น (รูปแบบ yyyy-mm-dd)
+  // เพื่อใช้ในการกรองช่วงวันที่ให้ตรงกับค่าที่ผู้ใช้เลือกจาก input type="date"
+  function toLocalDateString(raw: string | null | undefined): string | null {
+    if (!raw) return null;
+    try {
+      const match = raw.match(
+        /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/
+      );
+      let d: Date;
+      if (match) {
+        const [, y, m, day, hh, mm, ss] = match;
+        const year = Number(y);
+        const monthIndex = Number(m) - 1;
+        const dateNum = Number(day);
+        const hour = Number(hh);
+        const minute = Number(mm);
+        const second = Number(ss);
+        const utcMs = Date.UTC(
+          year,
+          monthIndex,
+          dateNum,
+          hour,
+          minute,
+          second
+        );
+        // ชดเชยเวลาให้เป็นเวลาไทย (UTC+7) แล้วจึงดึงเฉพาะส่วนวันที่
+        d = new Date(utcMs + 7 * 60 * 60 * 1000);
+      } else {
+        d = new Date(raw);
+      }
+
+      if (Number.isNaN(d.getTime())) return null;
+
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    } catch {
+      return null;
+    }
+  }
+
   useEffect(() => {
     async function fetchDocuments() {
       try {
@@ -231,10 +273,10 @@ export default function SearchPage() {
 
     if (accessFilter && doc.access !== accessFilter) return false;
 
-    if (startDate && doc.rawDate && doc.rawDate.slice(0, 10) < startDate)
-      return false;
-    if (endDate && doc.rawDate && doc.rawDate.slice(0, 10) > endDate)
-      return false;
+    const localDate = toLocalDateString(doc.rawDate);
+
+    if (startDate && localDate && localDate < startDate) return false;
+    if (endDate && localDate && localDate > endDate) return false;
 
     return true;
   });
