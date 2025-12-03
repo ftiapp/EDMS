@@ -9,17 +9,50 @@ export async function POST(req: Request) {
     const formData = await req.formData();
 
     const idParam = formData.get("id");
+    const emailParam = formData.get("email");
     if (!idParam) {
       return NextResponse.json({ message: "missing id" }, { status: 400 });
     }
+    if (!emailParam) {
+      return NextResponse.json({ message: "missing email" }, { status: 400 });
+    }
     const id = Number(idParam);
+    const email = String(emailParam).trim();
     if (!Number.isFinite(id)) {
       return NextResponse.json({ message: "invalid id" }, { status: 400 });
     }
 
     const files = (formData.getAll("files") as File[]).filter(Boolean);
-    if (!files || files.length === 0) {
-      return NextResponse.json({ message: "ไม่พบไฟล์ใหม่สำหรับอัปเดต" }, { status: 400 });
+
+    // รายการไฟล์เดิมที่ต้องการเก็บไว้ (จากหน้าแก้ไข)
+    let existingUrls: string[] = [];
+    let existingNames: string[] = [];
+
+    const existingUrlsRaw = formData.get("existingUrls");
+    const existingNamesRaw = formData.get("existingNames");
+
+    if (existingUrlsRaw) {
+      try {
+        const parsed = JSON.parse(String(existingUrlsRaw));
+        if (Array.isArray(parsed)) {
+          existingUrls = parsed.filter((u: unknown): u is string => typeof u === "string");
+        }
+      } catch {
+        // ignore parse error
+      }
+    }
+
+    if (existingNamesRaw) {
+      try {
+        const parsedNames = JSON.parse(String(existingNamesRaw));
+        if (Array.isArray(parsedNames)) {
+          existingNames = parsedNames.filter(
+            (n: unknown): n is string => typeof n === "string"
+          );
+        }
+      } catch {
+        // ignore
+      }
     }
 
     const uploadedFileUrls: string[] = [];
@@ -93,16 +126,28 @@ export async function POST(req: Request) {
       originalNames.push(file.name);
     }
 
+    // รวมไฟล์เดิมที่ยังเก็บไว้กับไฟล์ใหม่
+    const finalUrls = [...existingUrls, ...uploadedFileUrls];
+    const finalNames = [...existingNames, ...originalNames];
+
     const db = getDb();
-    await db.execute(
-      "UPDATE edms_documents SET file_url = ?, original_filenames = ? WHERE id = ?",
-      [JSON.stringify(uploadedFileUrls), JSON.stringify(originalNames), id]
+    const [result] = await db.execute(
+      "UPDATE edms_documents SET file_url = ?, original_filenames = ? WHERE id = ? AND owner_email = ?",
+      [JSON.stringify(finalUrls), JSON.stringify(finalNames), id, email]
     );
+
+    const anyResult: any = result;
+    if (!anyResult || !anyResult.affectedRows) {
+      return NextResponse.json(
+        { message: "คุณไม่มีสิทธิ์แก้ไขไฟล์ของเอกสารนี้" },
+        { status: 403 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      fileUrls: uploadedFileUrls,
-      count: uploadedFileUrls.length,
+      fileUrls: finalUrls,
+      count: finalUrls.length,
     });
   } catch (error) {
     console.error("Update files error:", error);

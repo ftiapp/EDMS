@@ -9,6 +9,7 @@ type DbDocument = {
   id: number;
   title: string;
   department: string;
+  owner_email?: string | null;
   tags: string | null;
   description: string | null;
   access_level: string;
@@ -29,6 +30,7 @@ type DetailState = {
   description: string;
   allFileUrls: string[];
   originalNames: string[];
+  accessLabel: string;
 };
 
 export default function DocumentDetailPage() {
@@ -41,6 +43,7 @@ export default function DocumentDetailPage() {
   const [detail, setDetail] = useState<DetailState | null>(null);
 
   const idParam = searchParams.get("id");
+  const email = (searchParams.get("email") ?? "").trim();
 
   // โหลดข้อมูลจาก DB ตาม id เมื่อไม่มีข้อมูลครบจาก query
   useEffect(() => {
@@ -57,9 +60,32 @@ export default function DocumentDetailPage() {
     const numericId = Number(idParam);
     if (!Number.isFinite(numericId)) return;
 
+    function formatAccessLabel(raw: string | null | undefined): string {
+      const value = (raw ?? "").toString().toLowerCase().trim();
+      if (!value) return "แชร์ส่วนตัว";
+
+      if (value.includes("team") || value.includes("ทีม")) {
+        return "แชร์ภายในหน่วยงาน";
+      }
+      if (value.includes("public") || value.includes("สาธารณะ")) {
+        return "แชร์ทั้งองค์กร";
+      }
+      if (value.includes("private") || value.includes("ส่วนตัว")) {
+        return "แชร์ส่วนตัว";
+      }
+      return value;
+    }
+
     const fetchFromDb = async () => {
       try {
-        const res = await fetch("/api/documents");
+        const params = new URLSearchParams();
+        if (email) {
+          params.set("email", email);
+        }
+        const queryString = params.toString();
+        const res = await fetch(
+          queryString ? `/api/documents?${queryString}` : "/api/documents"
+        );
         if (!res.ok) return;
         const data = await res.json();
         const docs = (data.documents || []) as DbDocument[];
@@ -151,7 +177,7 @@ export default function DocumentDetailPage() {
 
         setDetail({
           title: dbDoc.title || "ไม่พบชื่อเอกสาร",
-          owner: "ไม่ระบุผู้บันทึก",
+          owner: dbDoc.owner_email || "ไม่ระบุผู้บันทึก",
           displayDate: formatThaiDateTime(dbDoc.created_at || null),
           editedDisplay: formatThaiEdited(dbDoc.edited_at ?? null),
           department: dbDoc.department || "ไม่ระบุหน่วยงาน/สถาบัน",
@@ -162,6 +188,7 @@ export default function DocumentDetailPage() {
             "คำอธิบายเอกสารจะแสดงในส่วนนี้เมื่อเชื่อมต่อกับข้อมูลจริงแล้ว",
           allFileUrls,
           originalNames,
+          accessLabel: formatAccessLabel(dbDoc.access_level),
         });
       } catch (error) {}
     };
@@ -181,6 +208,16 @@ export default function DocumentDetailPage() {
   let description =
     searchParams.get("description") ??
     "คำอธิบายเอกสารจะแสดงในส่วนนี้เมื่อเชื่อมต่อกับข้อมูลจริงแล้ว";
+  const accessParam = searchParams.get("access");
+  const accessLabelFromQuery = (() => {
+    const value = (accessParam ?? "").toString().toLowerCase().trim();
+    if (!value) return "แชร์ส่วนตัว";
+    if (value.includes("team") || value.includes("ทีม")) return "แชร์ภายในหน่วยงาน";
+    if (value.includes("public") || value.includes("สาธารณะ")) return "แชร์ทั้งองค์กร";
+    if (value.includes("private") || value.includes("ส่วนตัว")) return "แชร์ส่วนตัว";
+    return value;
+  })();
+  let accessLabel = accessLabelFromQuery;
 
   // รองรับไฟล์แนบหลายไฟล์: fileUrls (JSON array) หรือ fileUrl เดี่ยว
   const fileUrlsParam = searchParams.get("fileUrls");
@@ -227,6 +264,7 @@ export default function DocumentDetailPage() {
     description = detail.description;
     allFileUrls = detail.allFileUrls;
     originalNames = detail.originalNames;
+    accessLabel = detail.accessLabel;
   }
 
   function handleDownload() {
@@ -284,7 +322,10 @@ export default function DocumentDetailPage() {
 
     const deleteDocument = async () => {
       try {
-        const res = await fetch(`/api/documents?id=${encodeURIComponent(idParam)}`, {
+        const params = new URLSearchParams();
+        params.set("id", idParam);
+        if (email) params.set("email", email);
+        const res = await fetch(`/api/documents?${params.toString()}`, {
           method: "DELETE",
         });
 
@@ -295,7 +336,7 @@ export default function DocumentDetailPage() {
         setDeleteMessage(`ดำเนินการลบเอกสาร "${title}" สำเร็จแล้ว`);
         setTimeout(() => {
           setDeleteMessage(null);
-          router.push("/search");
+          router.push(email ? `/search?email=${encodeURIComponent(email)}` : "/search");
         }, 1500);
       } catch (error) {
         console.error("Delete error", error);
@@ -464,15 +505,14 @@ export default function DocumentDetailPage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     >
-                      <circle cx="12" cy="9" r="4" />
-                      <path d="M9 18h6" />
-                      <path d="M10 22h4" />
-                      <path d="M9 14a5 5 0 0 1-2-4 5 5 0 0 1 10 0 5 5 0 0 1-2 4" />
+                      <path d="M12 2 4.5 5v6c0 4.3 3 8.2 7.5 9 4.5-.8 7.5-4.7 7.5-9V5L12 2Z" />
+                      <circle cx="12" cy="11" r="2.5" />
+                      <path d="M12 13.5V16" />
                     </svg>
                   </span>
-                  <span>หมวดหมู่ / ประเภทเอกสาร</span>
+                  <span>ระดับการเข้าถึง</span>
                 </div>
-                <p className="text-slate-700">{category}</p>
+                <p className="text-slate-700">{accessLabel}</p>
               </div>
               <div className="space-y-1">
                 <div className="flex itemscenter gap-2 font-semibold">
@@ -681,75 +721,32 @@ export default function DocumentDetailPage() {
             )}
           </div>
 
-          {/* Danger zone */}
-          <div className="flex justify-center">
-            <button
-              type="button"
-              onClick={handleDeleteClick}
-              className="flex items-center gap-2 rounded-full bg-rose-600 px-8 py-2 text-[11px] font-medium text-white shadow hover:bg-rose-700"
-            >
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-rose-600 text-[11px]">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M3 6h18" />
-                  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                  <path d="M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6" />
-                </svg>
-              </span>
-              <span>ลบเอกสาร</span>
-            </button>
-          </div>
+          {/* Danger zone - ปิดการใช้งานปุ่มลบในหน้า Detail (ลบจากการ์ดแทน) */}
         </section>
       </main>
 
       {/* Confirm delete modal */}
       {showConfirmDelete && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-5 text-xs text-slate-800 shadow-lg">
-            <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-rose-700">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-50 text-rose-700">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  className="h-3 w-3"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M3 6h18" />
-                  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                  <line x1="10" y1="11" x2="10" y2="17" />
-                  <line x1="14" y1="11" x2="14" y2="17" />
-                </svg>
-              </span>
-              <span>ยืนยันการลบเอกสาร</span>
+          <div className="w-full max-w-lg rounded-3xl bg-white px-8 py-6 text-sm text-slate-800 shadow-2xl">
+            <h2 className="mb-3 text-base font-semibold text-rose-700">
+              ยืนยันการลบเอกสาร
             </h2>
-            <p className="mb-4 text-[11px] text-slate-600">
+            <p className="mb-6 text-[13px] text-slate-700">
               คุณต้องการลบเอกสาร "{title}" ใช่หรือไม่?
             </p>
-            <div className="flex justify-end gap-2 text-[11px]">
+            <div className="flex justify-end gap-3 text-[13px]">
               <button
                 type="button"
                 onClick={handleCancelDelete}
-                className="rounded-full bg-slate-200 px-4 py-1.5 text-slate-700 hover:bg-slate-300"
+                className="rounded-full border border-slate-300 bg-white px-5 py-2 font-medium text-slate-700 hover:bg-slate-50"
               >
                 ยกเลิก
               </button>
               <button
                 type="button"
                 onClick={handleConfirmDelete}
-                className="rounded-full bg-rose-600 px-4 py-1.5 text-white shadow hover:bg-rose-700"
+                className="rounded-full bg-rose-600 px-6 py-2 font-semibold text-white shadow-sm hover:bg-rose-700"
               >
                 ยืนยันการลบ
               </button>

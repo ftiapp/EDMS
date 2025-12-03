@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cloudinary } from "@/lib/cloudinary";
 import { getDb } from "@/lib/db";
+import { getDepartmentByEmail } from "@/lib/employeeDb";
 
 export const runtime = "nodejs";
 
@@ -10,10 +11,27 @@ export async function POST(req: Request) {
 
     const files = (formData.getAll("files") as File[]).filter(Boolean);
     const title = (formData.get("title") as string | null) ?? "";
-    const department = (formData.get("department") as string | null) ?? "";
+    let department = (formData.get("department") as string | null) ?? "";
     const tags = (formData.get("tags") as string | null) ?? "";
     const shareTo = (formData.get("shareTo") as string | null) ?? "private";
     const description = (formData.get("description") as string | null) ?? "";
+    const email = (formData.get("email") as string | null) ?? "";
+
+    // ถ้ามีอีเมลจากระบบ HR ให้พยายามดึงฝ่ายจากฐาน employee-portal มาใช้แทนค่า department ที่ส่งมาจากฟอร์ม
+    if (email) {
+      try {
+        const empDept = await getDepartmentByEmail(email);
+        if (empDept) {
+          department =
+            empDept.departmentName ??
+            empDept.departmentNameEn ??
+            empDept.departmentCode ??
+            department;
+        }
+      } catch (err) {
+        console.error("Failed to resolve department from HR by email", err);
+      }
+    }
 
     if (!files || files.length === 0) {
       return NextResponse.json(
@@ -98,13 +116,24 @@ export async function POST(req: Request) {
     }
 
     const sql = `
-      INSERT INTO edms_documents (title, department, tags, description, access_level, file_url, original_filenames, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+      INSERT INTO edms_documents (
+        title,
+        department,
+        owner_email,
+        tags,
+        description,
+        access_level,
+        file_url,
+        original_filenames,
+        created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
     `;
 
     await db.execute(sql, [
       title,
       department,
+      email || null,
       tags,
       description,
       accessLevel,

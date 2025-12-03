@@ -10,6 +10,7 @@ type DbDocument = {
   id: number;
   title: string;
   department: string;
+  owner_email: string | null;
   tags: string | null;
   description: string | null;
   access_level: "private" | "team" | "public";
@@ -44,6 +45,8 @@ export default function SearchPage() {
   const initialStart = searchParams.get("startDate") ?? "";
   const initialEnd = searchParams.get("endDate") ?? "";
   const initialAccess = searchParams.get("access") ?? "";
+  const email = searchParams.get("email") ?? "";
+  const department = searchParams.get("department") ?? "";
 
   const [qInput, setQInput] = useState(initialQ);
   const [startInput, setStartInput] = useState(initialStart);
@@ -52,6 +55,8 @@ export default function SearchPage() {
   const [documents, setDocuments] = useState<UiDocument[]>([]);
   const [accessFilter, setAccessFilter] = useState(initialAccess);
   const [currentPage, setCurrentPage] = useState(1);
+  const [confirmDeleteDoc, setConfirmDeleteDoc] = useState<UiDocument | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const q = qInput.toLowerCase();
 
@@ -159,7 +164,13 @@ export default function SearchPage() {
   useEffect(() => {
     async function fetchDocuments() {
       try {
-        const res = await fetch("/api/documents");
+        const params = new URLSearchParams();
+        if (email) params.set("email", email);
+        if (department) params.set("department", department);
+        const query = params.toString();
+        const url = query ? `/api/documents?${query}` : "/api/documents";
+        const res = await fetch(url);
+
         if (!res.ok) return;
         const data = await res.json();
         const dbDocs = (data.documents || []) as DbDocument[];
@@ -233,7 +244,7 @@ export default function SearchPage() {
             date: displayDate,
             rawDate,
 
-            owner: "",
+            owner: doc.owner_email || "",
             description: doc.description || "",
             color: colors[index % colors.length],
             access: normalizedAccess,
@@ -251,7 +262,7 @@ export default function SearchPage() {
     }
 
     fetchDocuments();
-  }, []);
+  }, [email, department]);
 
   const startDate = startInput;
   const endDate = endInput;
@@ -291,7 +302,7 @@ export default function SearchPage() {
   const pagedDocs = filtered.slice(startIndex, endIndex);
 
   // สร้างรายการเลขหน้าพร้อมจุดไข่ปลา ถ้าหน้าเยอะ
-  const maxPageButtons = 5; 
+  const maxPageButtons = 5; // จำนวนปุ่มหน้า
   const pageItems: (number | string)[] = [];
 
   if (totalPages <= maxPageButtons) {
@@ -315,27 +326,25 @@ export default function SearchPage() {
 
     pageItems.push(1);
     if (windowStart > 2) pageItems.push("...");
-
     for (let i = windowStart; i <= windowEnd; i++) {
       pageItems.push(i);
     }
-
     if (windowEnd < totalPages - 1) pageItems.push("...");
     pageItems.push(totalPages);
   }
 
-  // ฟังก์ชันสำหรับเปลี่ยน access filter แบบเรียลไทม์
   function handleAccessFilterChange(nextAccess: string) {
     setAccessFilter(nextAccess);
     setCurrentPage(1);
 
     const params = new URLSearchParams();
-
     const qValue = qInput.trim();
     if (qValue) params.set("q", qValue);
     if (startInput) params.set("startDate", startInput);
     if (endInput) params.set("endDate", endInput);
     if (nextAccess) params.set("access", nextAccess);
+    if (email) params.set("email", email);
+    if (department) params.set("department", department);
 
     const query = params.toString();
     router.push(query ? `/search?${query}` : "/search", { scroll: false });
@@ -352,6 +361,8 @@ export default function SearchPage() {
     if (start) params.set("startDate", start);
     if (end) params.set("endDate", end);
     if (accessFilter) params.set("access", accessFilter);
+    if (email) params.set("email", email);
+    if (department) params.set("department", department);
 
     const query = params.toString();
     setCurrentPage(1);
@@ -365,20 +376,29 @@ export default function SearchPage() {
     setAccessFilter("");
     setCurrentPage(1);
 
-    router.push("/search");
+    const params = new URLSearchParams();
+    if (email) params.set("email", email);
+    if (department) params.set("department", department);
+    const query = params.toString();
+    router.push(query ? `/search?${query}` : "/search");
   }
 
   function handleDownload(
     docTitle: string,
     allFileUrls: string[],
-    _originalNames?: string[]
+    originalNames?: string[]
   ) {
+    if (!allFileUrls || allFileUrls.length === 0) {
+      return;
+    }
+
     if (allFileUrls.length === 1) {
+      // กรณีมีไฟล์เดียว ดาวน์โหลดไฟล์เดียวตรง ๆ ไม่ต้องเป็น ZIP
       const singleUrl = allFileUrls[0];
-      const singleName = _originalNames?.[0] || docTitle || "document";
+      const baseName = (originalNames?.[0] || docTitle || "document").trim();
       const downloadUrl = `/api/download?fileUrl=${encodeURIComponent(
         singleUrl
-      )}&filename=${encodeURIComponent(singleName)}`;
+      )}&filename=${encodeURIComponent(baseName)}`;
 
       const link = document.createElement("a");
       link.href = downloadUrl;
@@ -386,13 +406,15 @@ export default function SearchPage() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } else if (allFileUrls.length > 1) {
+    } else {
+      // กรณีมีหลายไฟล์: ดาวน์โหลดเป็น ZIP เดียว (ใช้ลอจิกเดียวกับหน้า My Documents)
       const fileUrlsParam = encodeURIComponent(JSON.stringify(allFileUrls));
       const titleParam = encodeURIComponent(docTitle || "document");
-      const namesParam = encodeURIComponent(JSON.stringify(_originalNames ?? []));
+      const originalNamesParam = encodeURIComponent(
+        JSON.stringify(originalNames ?? [])
+      );
 
-      // กรณีดาวน์โหลด ZIP เดียว: ใช้ title เป็นชื่อ ZIP และส่ง originalNames ไปให้ตั้งชื่อไฟล์ข้างใน 
-      const downloadUrl = `/api/download-zip?fileUrls=${fileUrlsParam}&title=${titleParam}&originalNames=${namesParam}`;
+      const downloadUrl = `/api/download-zip?fileUrls=${fileUrlsParam}&title=${titleParam}&originalNames=${originalNamesParam}`;
 
       const link = document.createElement("a");
       link.href = downloadUrl;
@@ -401,10 +423,44 @@ export default function SearchPage() {
       link.click();
       document.body.removeChild(link);
     }
+
     setDownloadMessage(`ดาวน์โหลดเอกสาร "${docTitle}" เรียบร้อยแล้ว`);
     setTimeout(() => {
       setDownloadMessage(null);
     }, 2500);
+  }
+
+  function handleRequestDelete(doc: UiDocument) {
+    if (!email) return;
+    setConfirmDeleteDoc(doc);
+  }
+
+  async function handleConfirmDelete() {
+    if (!email || !confirmDeleteDoc) return;
+
+    const { id } = confirmDeleteDoc;
+    setDeletingId(id);
+
+    try {
+      const params = new URLSearchParams();
+      params.set("id", String(id));
+      params.set("email", email);
+      const res = await fetch(`/api/documents?${params.toString()}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error("Delete failed");
+      }
+
+      setDocuments((prev) => prev.filter((d) => d.id !== id));
+      setConfirmDeleteDoc(null);
+    } catch (err) {
+      console.error("Delete error", err);
+      window.alert("ไม่สามารถลบเอกสารได้ กรุณาลองใหม่อีกครั้ง");
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   const accessLabel =
@@ -425,7 +481,6 @@ export default function SearchPage() {
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-6 pb-16">
         {/* Filter panel */}
         <section className="rounded-2xl border border-indigo-100 bg-white px-6 py-4 text-xs shadow-sm">
-
           <form
             className="mb-3 flex flex-wrap items-end gap-3"
             onSubmit={handleSubmit}
@@ -564,6 +619,36 @@ export default function SearchPage() {
           <span className="font-semibold text-slate-800">
             เอกสารทั้งหมด ({filtered.length} รายการ{accessLabel})
           </span>
+          {email && (
+            <Link
+              href={{
+                pathname: "/my-documents",
+                query: {
+                  email,
+                  department,
+                },
+              }}
+              className="text-[11px] font-medium text-indigo-700 hover:text-indigo-900 hover:underline"
+            >
+              <span className="inline-flex items-center gap-1 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 shadow-sm">
+
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  className="h-3 w-3"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M5 12h14" />
+                  <path d="M9 8l-4 4 4 4" />
+                </svg>
+                <span>กลับไปหน้าเอกสารของฉัน</span>
+              </span>
+            </Link>
+          )}
         </div>
 
         {/* Cards grid */}
@@ -590,10 +675,34 @@ export default function SearchPage() {
                   </svg>
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <h3 className="text-sm font-semibold text-slate-900">
-                    {doc.title}
-                  </h3>
+                <div className="flex flex-col gap-1 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-sm font-semibold text-slate-900">
+                      {doc.title}
+                    </h3>
+                    {email && email === doc.owner && (
+                      <button
+                        type="button"
+                        onClick={() => handleRequestDelete(doc)}
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-rose-50 text-rose-600 hover:bg-rose-100"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          className="h-3.5 w-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M3 6h18" />
+                          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          <path d="M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                   <div className="flex flex-wrap gap-2 text-[11px]">
                     <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-indigo-700">
                       {doc.deptTag}
@@ -654,8 +763,9 @@ export default function SearchPage() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         >
-                          <rect x="3" y="11" width="18" height="10" rx="2" />
-                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                          <rect x="4" y="10" width="16" height="10" rx="2" />
+                          <path d="M8 10V8a4 4 0 0 1 8 0v2" />
+                          <circle cx="12" cy="15" r="1" />
                         </svg>
                       )}
                       <span>
@@ -751,6 +861,7 @@ export default function SearchPage() {
                         fileUrl: doc.fileUrl,
                         fileUrls: JSON.stringify(doc.allFileUrls),
                         originalNames: JSON.stringify(doc.originalNames),
+                        email,
                       },
                     }}
                     className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 py-1.5 text-white hover:bg-emerald-700"
@@ -796,41 +907,11 @@ export default function SearchPage() {
                     <span>ดาวน์โหลดเอกสาร</span>
                   </button>
                 </div>
-
-                <Link
-                  href={{
-                    pathname: "/edit",
-                    query: {
-                      id: String(doc.id),
-                      title: doc.title,
-                      department: doc.deptTag,
-                      tags: doc.category,
-                      description: doc.description,
-                    },
-                  }}
-                  className="inline-flex w-full items-center justify-center gap-1 rounded-full bg-slate-700 px-3 py-1.5 text-[11px] text-white hover:bg-slate-800"
-                >
-                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      className="h-3 w-3 text-slate-700"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M4 20h4l10-10-4-4L4 16v4z" />
-                      <path d="M14 6l4 4" />
-                    </svg>
-                  </span>
-                  <span>แก้ไขเอกสารนี้</span>
-                </Link>
               </div>
             </article>
           ))}
         </section>
+
         {/* Pagination controls */}
         {totalPages > 1 && (
           <div className="mt-2 flex items-center justify-center gap-2 text-[11px]">
@@ -876,7 +957,57 @@ export default function SearchPage() {
             </button>
           </div>
         )}
+
       </main>
+
+      {confirmDeleteDoc && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-lg rounded-3xl bg-white px-8 py-6 text-sm text-slate-800 shadow-2xl">
+            <div className="mb-4 flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-rose-700">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="13" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              </span>
+              <h2 className="text-base font-semibold text-rose-700">
+                ยืนยันการลบเอกสาร
+              </h2>
+            </div>
+            <p className="mb-6 text-[13px] text-slate-700">
+              คุณต้องการลบเอกสาร "{confirmDeleteDoc.title}" ใช่หรือไม่?
+            </p>
+            <div className="flex justify-end gap-3 text-[13px]">
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteDoc(null)}
+                className="rounded-full border border-slate-300 bg-white px-5 py-2 font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                disabled={deletingId === confirmDeleteDoc.id}
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="rounded-full bg-rose-600 px-6 py-2 font-semibold text-white shadow-sm hover:bg-rose-700 disabled:opacity-60"
+                disabled={deletingId === confirmDeleteDoc.id}
+              >
+                {deletingId === confirmDeleteDoc.id ? "กำลังลบ..." : "ยืนยันการลบ"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Download success popup */}
       {downloadMessage && (
@@ -913,7 +1044,7 @@ export default function SearchPage() {
           </div>
 
           <div className="mx-auto flex flex-col items-center text-center text-[11px] leading-snug text-slate-700">
-            <span>© 2025 จัดทำโดย ฝ่ายดิจิทัลและเทคโนโลยี สภาอุตสาหกรรมแห่งประเทศไทย</span>
+            <span> 2025 จัดทำโดย ฝ่ายดิจิทัลและเทคโนโลยี สภาอุตสาหกรรมแห่งประเทศไทย</span>
             <span>จัดทำโดย นางสาวกัลยรักษ์ โรจนเลิศประเสริฐ</span>
             <span>นักศึกษาฝึกงาน มหาวิทยาลัยพะเยา</span>
           </div>

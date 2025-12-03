@@ -8,9 +8,18 @@ import JSZip from "jszip";
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const fileUrlsParam = searchParams.get("fileUrls");
+
+    // รองรับทั้งกรณีที่ส่ง JSON ตรง ๆ และกรณีที่ห่อด้วย encodeURIComponent
+    const rawFileUrlsParam = searchParams.get("fileUrls");
+    const rawOriginalNamesParam = searchParams.get("originalNames");
     const title = searchParams.get("title") || "document";
-    const originalNamesParam = searchParams.get("originalNames");
+
+    const fileUrlsParam = rawFileUrlsParam
+      ? decodeURIComponent(rawFileUrlsParam)
+      : null;
+    const originalNamesParam = rawOriginalNamesParam
+      ? decodeURIComponent(rawOriginalNamesParam)
+      : null;
 
     if (!fileUrlsParam) {
       return NextResponse.json(
@@ -30,7 +39,6 @@ export async function GET(req: Request) {
       // ถ้า parse ไม่ได้ ให้ถือว่าเป็น URL เดี่ยวที่ส่งมาเป็น string
       fileUrls = [fileUrlsParam];
     }
-
     if (originalNamesParam) {
       try {
         const parsedNames = JSON.parse(originalNamesParam);

@@ -48,12 +48,17 @@ export default function EditDocumentPage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [currentDateTime, setCurrentDateTime] = useState("");
   const [currentDateTimeThai, setCurrentDateTimeThai] = useState("");
+  const ownerEmail = (searchParams.get("email") ?? "").trim();
   const [initialTitle] = useState(() => searchParams.get("title") ?? "");
   const [initialDepartment] = useState(() => searchParams.get("department") ?? "");
   const [initialTags] = useState(() => searchParams.get("tags") ?? "");
   const [initialDescription] = useState(
     () => searchParams.get("description") ?? ""
   );
+  const [existingFiles, setExistingFiles] = useState<
+    { url: string; name: string }[]
+  >([]);
+  const [shareTo, setShareTo] = useState<"private" | "team" | "public">("private");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showConfirmSave, setShowConfirmSave] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
@@ -70,6 +75,77 @@ export default function EditDocumentPage() {
     });
     setCurrentDateTimeThai(`${base} น.`);
   }, []);
+
+  // โหลดรายการไฟล์เดิมของเอกสาร เพื่อให้ผู้ใช้เห็นว่าตอนนี้มีไฟล์อะไรบ้าง
+  useEffect(() => {
+    const idParam = searchParams.get("id");
+    if (!idParam || !ownerEmail) return;
+
+    const idNum = Number(idParam);
+    if (!Number.isFinite(idNum)) return;
+
+    async function fetchExistingFiles() {
+      try {
+        const res = await fetch(
+          `/api/documents?email=${encodeURIComponent(ownerEmail)}`
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        const docs = (data.documents || []) as any[];
+        const doc = docs.find((d) => d.id === idNum);
+        if (!doc) return;
+
+        const rawUrls = doc.file_url as string | null;
+        const rawNames = doc.original_filenames as string | null;
+        const rawAccess = (doc.access_level || "").toString().toLowerCase().trim();
+
+        let urls: string[] = [];
+        let names: string[] = [];
+
+        if (rawUrls) {
+          try {
+            const parsed = JSON.parse(rawUrls);
+            if (Array.isArray(parsed)) {
+              urls = parsed.filter((u): u is string => typeof u === "string");
+            }
+          } catch {
+            // fallback: ไม่ต้องทำอะไร หาก parse ไม่ได้
+          }
+        }
+        if (rawNames) {
+          try {
+            const parsedNames = JSON.parse(rawNames);
+            if (Array.isArray(parsedNames)) {
+              names = parsedNames.filter((n): n is string => typeof n === "string");
+            }
+          } catch {
+            // ignore
+          }
+        }
+
+        const combined: { url: string; name: string }[] = urls.map(
+          (url, idx) => ({
+            url,
+            name: names[idx] || `ไฟล์ที่ ${idx + 1}`,
+          })
+        );
+        setExistingFiles(combined);
+
+        // ตั้งค่า default ของระดับการแชร์ตาม access_level เดิมของเอกสาร
+        let normalized: "private" | "team" | "public" = "private";
+        if (rawAccess.includes("team") || rawAccess.includes("ทีม")) {
+          normalized = "team";
+        } else if (rawAccess.includes("public") || rawAccess.includes("สาธารณะ")) {
+          normalized = "public";
+        }
+        setShareTo(normalized);
+      } catch (err) {
+        console.error("Failed to load existing files for edit page", err);
+      }
+    }
+
+    fetchExistingFiles();
+  }, [ownerEmail, searchParams]);
 
   useEffect(() => {
     if (!message) return;
@@ -112,14 +188,32 @@ export default function EditDocumentPage() {
       return;
     }
 
+    if (!ownerEmail) {
+      setIsSuccess(false);
+      setMessage("ไม่พบอีเมลเจ้าของเอกสาร ไม่สามารถแก้ไขได้");
+      return;
+    }
+
     setIsSaving(true);
     setMessage(null);
 
     try {
-      // ถ้ามีการเลือกไฟล์ใหม่ ให้อัปเดตไฟล์แนบก่อน (รองรับหลายไฟล์เหมือนหน้าอัปโหลด)
-      if (selectedFiles.length > 0) {
+      // อัปเดตไฟล์แนบเดิม/ใหม่ ถ้ามีการเลือกไฟล์ใหม่หรือมีการลบไฟล์เดิม
+      const hasSelectedNewFiles = selectedFiles.length > 0;
+      const hasExistingChange = existingFiles.length >= 0; // ใช้ existingFiles ปัจจุบันเป็นรายการที่ต้องการเก็บไว้
+
+      if (hasSelectedNewFiles || hasExistingChange) {
         const fileForm = new FormData();
         fileForm.set("id", documentId);
+        fileForm.set("email", ownerEmail);
+        fileForm.set(
+          "existingUrls",
+          JSON.stringify(existingFiles.map((f) => f.url))
+        );
+        fileForm.set(
+          "existingNames",
+          JSON.stringify(existingFiles.map((f) => f.name))
+        );
         selectedFiles.forEach((f) => fileForm.append("files", f));
 
         const fileRes = await fetch("/api/documents/update-files", {
@@ -136,21 +230,25 @@ export default function EditDocumentPage() {
       const department = formData.get("department") as string;
       const tags = (formData.get("tags") as string) ?? "";
       const description = (formData.get("description") as string) ?? "";
-      const shareTo = (formData.get("shareTo") as string) ?? "";
 
-      const res = await fetch(`/api/documents?id=${encodeURIComponent(documentId)}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-          department,
-          tags,
-          description,
-          access_level: shareTo,
-        }),
-      });
+      const res = await fetch(
+        `/api/documents?id=${encodeURIComponent(documentId)}&email=${encodeURIComponent(
+          ownerEmail
+        )}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title,
+            department,
+            tags,
+            description,
+            access_level: shareTo,
+          }),
+        }
+      );
 
       if (!res.ok) {
         throw new Error("Update failed");
@@ -161,9 +259,21 @@ export default function EditDocumentPage() {
       setTimeout(() => {
         const idParam = searchParams.get("id");
         if (idParam) {
-          router.push(`/detail?id=${encodeURIComponent(idParam)}`);
+          if (ownerEmail) {
+            router.push(
+              `/detail?id=${encodeURIComponent(idParam)}&email=${encodeURIComponent(
+                ownerEmail
+              )}`
+            );
+          } else {
+            router.push(`/detail?id=${encodeURIComponent(idParam)}`);
+          }
         } else {
-          router.push("/search");
+          if (ownerEmail) {
+            router.push(`/search?email=${encodeURIComponent(ownerEmail)}`);
+          } else {
+            router.push("/search");
+          }
         }
       }, 1200);
     } catch (err) {
@@ -395,6 +505,85 @@ export default function EditDocumentPage() {
               )}
             </div>
 
+            {/* Existing files overview (after new file picker) */}
+            {existingFiles.length > 0 && (
+              <div className="space-y-2">
+                <label className="block text-[11px] font-medium text-slate-800">
+                  ไฟล์เอกสารเดิมที่แนบอยู่ ({existingFiles.length} ไฟล์)
+                </label>
+                <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-[11px] text-slate-700">
+                  <ul className="max-h-40 space-y-1 overflow-y-auto pr-1">
+                    {existingFiles.map((file, index) => (
+                      <li
+                        key={file.url + index}
+                        className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-1.5 text-[11px] shadow-sm"
+                      >
+                        <div className="flex min-w-0 flex-1 items-center gap-2">
+                          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-50 text-[11px] text-indigo-700">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              className="h-4 w-4"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
+                              <path d="M14 2v6h6" />
+                            </svg>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate font-medium text-slate-800">
+                              {file.name}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={file.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="whitespace-nowrap rounded-full bg-slate-800 px-3 py-1 text-[10px] font-medium text-white hover:bg-black"
+                          >
+                            เปิดดู
+                          </a>
+                          <button
+                            type="button"
+                            className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-100 text-[10px] text-rose-700 hover:bg-rose-200"
+                            onClick={() => {
+                              setExistingFiles((prev) =>
+                                prev.filter((_, i) => i !== index)
+                              );
+                            }}
+                            title="ลบไฟล์เดิมนี้ออกจากเอกสาร"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              className="h-3 w-3"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M18 6 6 18" />
+                              <path d="M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 text-[10px] text-slate-500">
+                    คุณสามารถลบไฟล์เดิมที่ไม่ต้องการได้โดยกดปุ่มกากบาทด้านขวา หากไม่มีการเลือกไฟล์ใหม่ ระบบจะบันทึกเฉพาะไฟล์เดิมที่เหลืออยู่เมื่อกดบันทึกการแก้ไข
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Document name & department */}
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-1">
@@ -492,7 +681,12 @@ export default function EditDocumentPage() {
               <select
                 name="shareTo"
                 className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-300"
-                defaultValue=""
+                value={shareTo}
+                onChange={(e) =>
+                  setShareTo(
+                    (e.target.value as "private" | "team" | "public") || "private"
+                  )
+                }
                 required
               >
                 <option value="" disabled>
@@ -621,13 +815,13 @@ export default function EditDocumentPage() {
       {/* Confirm save modal */}
       {showConfirmSave && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-5 text-xs text-slate-800 shadow-lg">
-            <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-indigo-700">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-50 text-indigo-700">
+          <div className="w-full max-w-lg rounded-3xl bg-white px-8 py-6 text-sm text-slate-800 shadow-2xl">
+            <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-indigo-700">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-indigo-700">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
-                  className="h-3 w-3"
+                  className="h-4 w-4"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
@@ -640,14 +834,14 @@ export default function EditDocumentPage() {
               </span>
               <span>ยืนยันการบันทึกการแก้ไข</span>
             </h2>
-            <p className="mb-4 text-[11px] text-slate-600">
+            <p className="mb-6 text-[13px] text-slate-600">
               คุณต้องการบันทึกการแก้ไขเอกสาร "{initialTitle || "(ยังไม่มีชื่อเอกสาร)"}" ใช่หรือไม่?
             </p>
-            <div className="flex justify-end gap-2 text-[11px]">
+            <div className="flex justify-end gap-3 text-[13px]">
               <button
                 type="button"
                 onClick={() => setShowConfirmSave(false)}
-                className="rounded-full bg-slate-200 px-4 py-1.5 text-slate-700 hover:bg-slate-300"
+                className="rounded-full border border-slate-300 bg-white px-5 py-2 font-medium text-slate-700 hover:bg-slate-50"
               >
                 ยกเลิก
               </button>
@@ -658,7 +852,7 @@ export default function EditDocumentPage() {
                   const formEl = document.getElementById("edit-form") as HTMLFormElement | null;
                   formEl?.requestSubmit();
                 }}
-                className="rounded-full bg-indigo-700 px-4 py-1.5 text-white shadow hover:bg-indigo-800"
+                className="rounded-full bg-indigo-700 px-6 py-2 font-semibold text-white shadow-sm hover:bg-indigo-800"
               >
                 ยืนยันการบันทึก
               </button>
@@ -670,13 +864,13 @@ export default function EditDocumentPage() {
       {/* Confirm cancel modal */}
       {showConfirmCancel && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-5 text-xs text-slate-800 shadow-lg">
-            <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-rose-700">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-50 text-rose-700">
+          <div className="w-full max-w-lg rounded-3xl bg-white px-8 py-6 text-sm text-slate-800 shadow-2xl">
+            <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-rose-700">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-50 text-rose-700">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
-                  className="h-3 w-3"
+                  className="h-4 w-4"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
@@ -690,14 +884,14 @@ export default function EditDocumentPage() {
               </span>
               <span>ยืนยันการยกเลิกการแก้ไข</span>
             </h2>
-            <p className="mb-4 text-[11px] text-slate-600">
-              คุณต้องการยกเลิกการแก้ไขเอกสาร "{initialTitle || "(ยังไม่มีชื่อเอกสาร)"}" ใช่หรือไม่?
+            <p className="mb-6 text-[13px] text-slate-600">
+              คุณต้องการยกเลิกการแก้ไขเอกสารนี้ และกลับไปหน้าก่อนหน้า ใช่หรือไม่?
             </p>
-            <div className="flex justify-end gap-2 text-[11px]">
+            <div className="flex justify-end gap-3 text-[13px]">
               <button
                 type="button"
                 onClick={() => setShowConfirmCancel(false)}
-                className="rounded-full bg-slate-200 px-4 py-1.5 text-slate-700 hover:bg-slate-300"
+                className="rounded-full border border-slate-300 bg-white px-5 py-2 font-medium text-slate-700 hover:bg-slate-50"
               >
                 ยกเลิก
               </button>
@@ -705,28 +899,9 @@ export default function EditDocumentPage() {
                 type="button"
                 onClick={() => {
                   setShowConfirmCancel(false);
-                  const formEl = document.getElementById("edit-form") as HTMLFormElement | null;
-                  if (formEl) {
-                    formEl.reset();
-                  }
-                  const now = new Date();
-                  const iso = now.toISOString();
-                  const local = iso.slice(0, 10);
-                  setCurrentDateTime(local);
-                  setIsSuccess(false);
-                  setMessage("ยกเลิกการแก้ไขเอกสารแล้ว");
-                  setSelectedFiles([]);
-
-                  const idParam = searchParams.get("id");
-                  const target = idParam
-                    ? `/detail?id=${encodeURIComponent(idParam)}`
-                    : "/search";
-
-                  setTimeout(() => {
-                    router.push(target);
-                  }, 1200);
+                  router.back();
                 }}
-                className="rounded-full bg-rose-600 px-4 py-1.5 text-white shadow hover:bg-rose-700"
+                className="rounded-full bg-rose-600 px-6 py-2 font-semibold text-white shadow-sm hover:bg-rose-700"
               >
                 ยืนยันการยกเลิก
               </button>

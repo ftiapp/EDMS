@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import UserNavbar from "../components/UserNavbar";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 
 const ALLOWED_DEPARTMENTS = [
@@ -42,6 +42,8 @@ const ALLOWED_DEPARTMENTS = [
 
 export default function DocumentUploadPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email") ?? "";
   const [isUploading, setIsUploading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -51,6 +53,9 @@ export default function DocumentUploadPage() {
   const [showConfirmUpload, setShowConfirmUpload] = useState(false);
   const [showConfirmCancel, setShowConfirmCancel] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [resolvedDepartment, setResolvedDepartment] = useState<string | null>(null);
+  const [loadingDept, setLoadingDept] = useState(false);
+  const [deptError, setDeptError] = useState<string | null>(null);
 
   function getLocalDateString() {
     const now = new Date();
@@ -84,6 +89,50 @@ export default function DocumentUploadPage() {
     return () => clearTimeout(timer);
   }, [message]);
 
+  // ถ้ามีอีเมลจาก HR ให้พยายามดึงฝ่ายจากฐาน employee-portal มาใช้เป็น department อัตโนมัติ
+  useEffect(() => {
+    if (!email) {
+      setResolvedDepartment(null);
+      setDeptError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingDept(true);
+    setDeptError(null);
+
+    fetch(`/api/hr/department?email=${encodeURIComponent(email)}`)
+      .then(async (res) => {
+        if (!res.ok) {
+          if (res.status === 404) {
+            if (!cancelled) setResolvedDepartment(null);
+            return;
+          }
+          throw new Error("Failed to load department for upload");
+        }
+        const data: { departmentName: string | null; departmentNameEn: string | null; departmentCode: string | null } =
+          await res.json();
+        if (!cancelled) {
+          setResolvedDepartment(
+            data.departmentName ?? data.departmentNameEn ?? data.departmentCode ?? null
+          );
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.error(err);
+          setDeptError("ไม่สามารถดึงข้อมูลฝ่ายจากระบบพนักงานได้");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingDept(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [email]);
+
   function isAllowedFile(file: File) {
     const allowed = ["pdf", "docx", "jpg", "jpeg", "png"];
     const ext = file.name.split(".").pop()?.toLowerCase();
@@ -95,11 +144,21 @@ export default function DocumentUploadPage() {
     const form = e.currentTarget;
     const formData = new FormData(form);
 
-    const department = (formData.get("department") as string | null) ?? "";
-    if (!ALLOWED_DEPARTMENTS.includes(department)) {
-      setIsSuccess(false);
-      setMessage("กรุณาเลือกฝ่าย/สถาบันจากรายการที่กำหนดเท่านั้น");
-      return;
+    if (email) {
+      formData.set("email", email);
+    }
+
+    let department = (formData.get("department") as string | null) ?? "";
+    // ถ้ามีฝ่ายจาก HR แล้ว ให้ใช้ค่านั้นและไม่ต้องเช็คกับ ALLOWED_DEPARTMENTS
+    if (resolvedDepartment) {
+      department = resolvedDepartment;
+      formData.set("department", resolvedDepartment);
+    } else {
+      if (!ALLOWED_DEPARTMENTS.includes(department)) {
+        setIsSuccess(false);
+        setMessage("กรุณาเลือกฝ่าย/สถาบันจากรายการที่กำหนดเท่านั้น");
+        return;
+      }
     }
 
     if (selectedFiles.length === 0) {
@@ -378,22 +437,47 @@ export default function DocumentUploadPage() {
                   ฝ่าย/สถาบัน *
                 </label>
                 <div className="relative">
-                  <input
-                    name="department"
-                    list="departmentList"
-                    placeholder="พิมพ์เพื่อค้นหาหรือเลือกฝ่าย/สถาบัน"
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs outline-none placeholder:text-slate-400 focus:border-rose-400 focus:ring-1 focus:ring-rose-300 font-sans"
-                    autoComplete="off"
-                    required
-                  />
-                  <datalist id="departmentList">
-                    {ALLOWED_DEPARTMENTS.map((dept) => (
-                      <option key={dept} value={dept}>
-                        {dept}
-                      </option>
-                    ))}
-                  </datalist>
+                  {resolvedDepartment ? (
+                    <input
+                      key="resolved-department"
+                      name="department"
+                      value={resolvedDepartment}
+                      readOnly
+                      placeholder="ฝ่ายจะถูกดึงจากระบบพนักงานอัตโนมัติ"
+                      className="w-full rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-xs outline-none placeholder:text-slate-400 focus:border-rose-400 focus:ring-1 focus:ring-rose-300 font-sans"
+                      autoComplete="off"
+                      required
+                    />
+                  ) : (
+                    <>
+                      <input
+                        name="department"
+                        list="departmentList"
+                        placeholder="พิมพ์เพื่อค้นหาหรือเลือกฝ่าย/สถาบัน"
+                        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs outline-none placeholder:text-slate-400 focus:border-rose-400 focus:ring-1 focus:ring-rose-300 font-sans"
+                        autoComplete="off"
+                        required
+                      />
+                      <datalist id="departmentList">
+                        {ALLOWED_DEPARTMENTS.map((dept) => (
+                          <option key={dept} value={dept}>
+                            {dept}
+                          </option>
+                        ))}
+                      </datalist>
+                    </>
+                  )}
                 </div>
+                {email && (
+                  <p className="mt-1 text-[10px] text-slate-500">
+                    {loadingDept
+                      ? "กำลังดึงข้อมูลฝ่ายจากระบบพนักงาน..."
+                      : resolvedDepartment
+                      ? "กำหนดฝ่ายอัตโนมัติตามข้อมูลจากระบบพนักงาน"
+                      : deptError ||
+                        "หากไม่พบข้อมูลจากระบบพนักงาน กรุณาเลือกฝ่ายด้วยตนเอง"}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -448,7 +532,7 @@ export default function DocumentUploadPage() {
                     <path d="M22 21v-1a4 4 0 0 0-4-4h-3" />
                   </svg>
                 </span>
-                <span>แชร์เอกสาร (สิทธิ์การเข้าถึง) *</span>
+                <span>แชร์เอกสาร (กำหนดสิทธิ์การเข้าถึง) *</span>
               </label>
               <select
                 name="shareTo"
@@ -457,11 +541,17 @@ export default function DocumentUploadPage() {
                 required
               >
                 <option value="" disabled>
-                  เลือกระดับการแชร์
+                  เลือกระดับการแชร์เอกสาร
                 </option>
-                <option value="private">แชร์ส่วนตัว</option>
-                <option value="team">แชร์ภายในหน่วยงาน</option>
-                <option value="public">แชร์ทั้งองค์กร</option>
+                <option value="private">
+                  แชร์ส่วนตัว – เห็นได้เฉพาะคุณ (ผู้บันทึกเอกสาร)
+                </option>
+                <option value="team">
+                  แชร์ภายในหน่วยงาน – เห็นได้เฉพาะคนในฝ่าย/สถาบันเดียวกัน
+                </option>
+                <option value="public">
+                  แชร์ทั้งองค์กร – ทุกคนในระบบสามารถค้นหาและเปิดดูได้
+                </option>
               </select>
             </div>
 
@@ -637,7 +727,11 @@ export default function DocumentUploadPage() {
                 type="button"
                 onClick={() => {
                   setShowSuccessModal(false);
-                  router.push("/search");
+                  const params = new URLSearchParams();
+                  if (email) params.set("email", email);
+                  if (resolvedDepartment) params.set("department", resolvedDepartment);
+                  const query = params.toString();
+                  router.push(query ? `/search?${query}` : "/search");
                 }}
                 className="flex items-center gap-1.5 rounded-full bg-emerald-600 px-4 py-1.5 text-white shadow hover:bg-emerald-700"
               >
@@ -666,13 +760,13 @@ export default function DocumentUploadPage() {
       {/* Confirm upload modal */}
       {showConfirmUpload && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-5 text-xs text-slate-800 shadow-lg">
-            <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-emerald-700">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+          <div className="w-full max-w-lg rounded-3xl bg-white px-8 py-6 text-sm text-slate-800 shadow-2xl">
+            <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-indigo-700">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-indigo-700">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
-                  className="h-3 w-3"
+                  className="h-4 w-4"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
@@ -685,14 +779,14 @@ export default function DocumentUploadPage() {
               </span>
               <span>ยืนยันการอัปโหลดเอกสาร</span>
             </h2>
-            <p className="mb-4 text-[11px] text-slate-600">
+            <p className="mb-6 text-[13px] text-slate-600">
               คุณต้องการอัปโหลดเอกสารที่เลือกไว้ใช่หรือไม่?
             </p>
-            <div className="flex justify-end gap-2 text-[11px]">
+            <div className="flex justify-end gap-3 text-[13px]">
               <button
                 type="button"
                 onClick={() => setShowConfirmUpload(false)}
-                className="rounded-full bg-slate-200 px-4 py-1.5 text-slate-700 hover:bg-slate-300"
+                className="rounded-full border border-slate-300 bg-white px-5 py-2 font-medium text-slate-700 hover:bg-slate-50"
               >
                 ยกเลิก
               </button>
@@ -703,7 +797,7 @@ export default function DocumentUploadPage() {
                   const formEl = document.getElementById("upload-form") as HTMLFormElement | null;
                   formEl?.requestSubmit();
                 }}
-                className="rounded-full bg-emerald-600 px-4 py-1.5 text-white shadow hover:bg-emerald-700"
+                className="rounded-full bg-indigo-700 px-6 py-2 font-semibold text-white shadow-sm hover:bg-indigo-800"
               >
                 ยืนยันการอัปโหลด
               </button>
@@ -715,13 +809,13 @@ export default function DocumentUploadPage() {
       {/* Confirm cancel upload modal */}
       {showConfirmCancel && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-5 text-xs text-slate-800 shadow-lg">
-            <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-rose-700">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-50 text-rose-700">
+          <div className="w-full max-w-lg rounded-3xl bg-white px-8 py-6 text-sm text-slate-800 shadow-2xl">
+            <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-rose-700">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-50 text-rose-700">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
-                  className="h-3 w-3"
+                  className="h-4 w-4"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
@@ -735,14 +829,14 @@ export default function DocumentUploadPage() {
               </span>
               <span>ยืนยันการยกเลิกการอัปโหลด</span>
             </h2>
-            <p className="mb-4 text-[11px] text-slate-600">
+            <p className="mb-6 text-[13px] text-slate-600">
               คุณต้องการยกเลิกการอัปโหลดเอกสารนี้ใช่หรือไม่?
             </p>
-            <div className="flex justify-end gap-2 text-[11px]">
+            <div className="flex justify-end gap-3 text-[13px]">
               <button
                 type="button"
                 onClick={() => setShowConfirmCancel(false)}
-                className="rounded-full bg-slate-200 px-4 py-1.5 text-slate-700 hover:bg-slate-300"
+                className="rounded-full border border-slate-300 bg-white px-5 py-2 font-medium text-slate-700 hover:bg-slate-50"
               >
                 ยกเลิก
               </button>
@@ -754,15 +848,14 @@ export default function DocumentUploadPage() {
                   if (formEl) {
                     formEl.reset();
                   }
+                  setSelectedFiles([]);
                   const localDate = getLocalDateString();
                   setCurrentDateTime(localDate);
-                  setIsSuccess(false);
-                  setMessage("ยกเลิกการอัปโหลดเอกสารแล้ว");
-                  setSelectedFiles([]);
+                  setCurrentDateTimeThai(getThaiDateTimeString());
                 }}
-                className="rounded-full bg-rose-600 px-4 py-1.5 text-white shadow hover:bg-rose-700"
+                className="rounded-full bg-rose-600 px-6 py-2 font-semibold text-white shadow-sm hover:bg-rose-700"
               >
-                ยืนยันการยกเลิก
+                ยืนยันการยกเลิกการอัปโหลด
               </button>
             </div>
           </div>
