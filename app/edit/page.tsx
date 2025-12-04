@@ -762,10 +762,10 @@ export default function EditDocumentPage() {
               <button
                 type="button"
                 disabled={isSaving}
-                className="flex items-center gap-2 rounded-full bg-indigo-700 px-7 py-2.5 text-white shadow-md hover:bg-indigo-800 disabled:cursor-not-allowed disabled:opacity-70"
+                className="group flex items-center gap-3 rounded-full bg-indigo-700 px-7 py-2.5 text-[12px] font-semibold text-white shadow-lg transition-transform duration-150 hover:-translate-y-0.5 hover:bg-indigo-800 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
                 onClick={() => setShowConfirmSave(true)}
               >
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-indigo-700 text-[11px]">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-indigo-700 text-[11px] transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-1">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -781,16 +781,16 @@ export default function EditDocumentPage() {
                     <path d="M9 17h6" />
                   </svg>
                 </span>
-                <span>{isSaving ? "กำลังบันทึก..." : "บันทึกการแก้ไข"}</span>
+                <span className="tracking-wide whitespace-nowrap">{isSaving ? "กำลังบันทึก..." : "บันทึกการแก้ไข"}</span>
               </button>
               <button
                 type="button"
-                className="flex items-center gap-2 rounded-full bg-rose-600 px-7 py-2.5 text-white shadow-md hover:bg-rose-700"
+                className="group flex items-center gap-3 rounded-full bg-rose-600 px-7 py-2.5 text-[12px] font-semibold text-white shadow-lg transition-transform duration-150 hover:-translate-y-0.5 hover:bg-rose-700 hover:shadow-xl"
                 onClick={() => {
                   setShowConfirmCancel(true);
                 }}
               >
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-rose-600 text-[11px]">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-rose-600 text-[11px] transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-1">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -805,7 +805,7 @@ export default function EditDocumentPage() {
                     <path d="M6 6l12 12" />
                   </svg>
                 </span>
-                <span>ยกเลิก</span>
+                <span className="whitespace-nowrap tracking-wide">ยกเลิก</span>
               </button>
             </div>
           </form>
@@ -841,9 +841,24 @@ export default function EditDocumentPage() {
               <button
                 type="button"
                 onClick={() => setShowConfirmSave(false)}
-                className="rounded-full border border-slate-300 bg-white px-5 py-2 font-medium text-slate-700 hover:bg-slate-50"
+                className="group flex items-center gap-2 rounded-full border border-slate-300 bg-white px-6 py-2 font-medium text-slate-700 shadow-sm transition-transform duration-150 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
               >
-                ยกเลิก
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-600 text-[11px] transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-1">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M18 6 6 18" />
+                    <path d="M6 6l12 12" />
+                  </svg>
+                </span>
+                <span className="whitespace-nowrap">ยกเลิก</span>
               </button>
               <button
                 type="button"
@@ -852,9 +867,24 @@ export default function EditDocumentPage() {
                   const formEl = document.getElementById("edit-form") as HTMLFormElement | null;
                   formEl?.requestSubmit();
                 }}
-                className="rounded-full bg-indigo-700 px-6 py-2 font-semibold text-white shadow-sm hover:bg-indigo-800"
+                className="group flex items-center gap-2 rounded-full bg-indigo-700 px-7 py-2 font-semibold text-white shadow-md transition-transform duration-150 hover:-translate-y-0.5 hover:bg-indigo-800 hover:shadow-lg"
               >
-                ยืนยันการบันทึก
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-indigo-700 text-[11px] transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-1">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M9 12.5 11 14.5 15 10.5" />
+                    <circle cx="12" cy="12" r="9" />
+                  </svg>
+                </span>
+                <span className="whitespace-nowrap">ยืนยันการบันทึก</span>
               </button>
             </div>
           </div>
@@ -891,9 +921,24 @@ export default function EditDocumentPage() {
               <button
                 type="button"
                 onClick={() => setShowConfirmCancel(false)}
-                className="rounded-full border border-slate-300 bg-white px-5 py-2 font-medium text-slate-700 hover:bg-slate-50"
+                className="group flex items-center gap-2 rounded-full border border-slate-300 bg-white px-6 py-2 font-medium text-slate-700 shadow-sm transition-transform duration-150 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
               >
-                ยกเลิก
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-600 text-[11px] transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-1">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M18 6 6 18" />
+                    <path d="M6 6l12 12" />
+                  </svg>
+                </span>
+                <span className="whitespace-nowrap">ยกเลิก</span>
               </button>
               <button
                 type="button"
@@ -901,9 +946,25 @@ export default function EditDocumentPage() {
                   setShowConfirmCancel(false);
                   router.back();
                 }}
-                className="rounded-full bg-rose-600 px-6 py-2 font-semibold text-white shadow-sm hover:bg-rose-700"
+                className="group flex items-center gap-2 rounded-full bg-rose-600 px-7 py-2 font-semibold text-white shadow-md transition-transform duration-150 hover:-translate-y-0.5 hover:bg-rose-700 hover:shadow-lg"
               >
-                ยืนยันการยกเลิก
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-rose-600 text-[11px] transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-1">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 9v4" />
+                    <path d="M12 17h.01" />
+                    <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                  </svg>
+                </span>
+                <span className="whitespace-nowrap">ยืนยันการยกเลิก</span>
               </button>
             </div>
           </div>

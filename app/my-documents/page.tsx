@@ -448,7 +448,7 @@ export default function MyDocumentsPage() {
 
           {!loading && !error && filteredDocs.length > 0 && (
             <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {pagedDocs.map((doc) => {
+              {pagedDocs.map((doc, index) => {
                 const createdDisplay = formatThaiDateTime(doc.created_at);
                 const editedDisplay = doc.edited_at ? formatThaiDateTime(doc.edited_at) : null;
 
@@ -477,10 +477,12 @@ export default function MyDocumentsPage() {
                   }
                 }
 
+                const colorClass = "border-sky-300 bg-sky-50/70";
+
                 return (
                   <div
                     key={doc.id}
-                    className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 text-[11px] text-slate-800 shadow-sm transition-transform duration-150 hover:-translate-y-1 hover:shadow-lg"
+                    className={`flex flex-col justify-between rounded-2xl border ${colorClass} p-4 text-[11px] text-slate-800 shadow-sm transition-transform duration-150 hover:-translate-y-1 hover:shadow-lg`}
                   >
                     <div className="mb-2 space-y-1">
                       <div className="flex items-center gap-2">
@@ -635,9 +637,9 @@ export default function MyDocumentsPage() {
                             email,
                           },
                         }}
-                        className="group inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-6 py-2 text-white shadow-md transition-transform duration-150 hover:-translate-y-0.5 hover:bg-black hover:shadow-lg"
+                        className="group inline-flex items-center justify-center gap-2 rounded-full bg-rose-600 px-6 py-2 text-white shadow-md transition-transform duration-150 hover:-translate-y-0.5 hover:bg-rose-700 hover:shadow-lg"
                       >
-                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/90 text-slate-800 transition-transform duration-200 group-hover:scale-110">
+                        <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/90 text-rose-600 transition-transform duration-200 group-hover:scale-110">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             viewBox="0 0 24 24"

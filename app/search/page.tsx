@@ -543,10 +543,10 @@ export default function SearchPage() {
               <button
                 type="button"
                 onClick={() => handleAccessFilterChange("")}
-                className={`rounded-full px-4 py-1.5 text-[11px] font-semibold shadow-sm border outline-none transition-colors ${
+                className={`rounded-full px-5 py-2 text-[11px] font-semibold outline-none transition-all duration-150 ${
                   accessFilter === ""
-                    ? "border-indigo-700 bg-indigo-700 text-white"
-                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    ? "border border-indigo-700 bg-indigo-700 text-white shadow-md hover:bg-indigo-800 hover:shadow-lg hover:-translate-y-0.5"
+                    : "border border-slate-300 bg-white text-slate-700 shadow-sm hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
                 }`}
               >
                 ทั้งหมด
@@ -554,10 +554,10 @@ export default function SearchPage() {
               <button
                 type="button"
                 onClick={() => handleAccessFilterChange("team")}
-                className={`rounded-full border px-4 py-1.5 text-[11px] font-medium outline-none transition-colors ${
+                className={`rounded-full px-5 py-2 text-[11px] font-medium outline-none transition-all duration-150 ${
                   accessFilter === "team"
-                    ? "border-indigo-700 bg-indigo-700 text-white"
-                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    ? "border border-indigo-700 bg-indigo-700 text-white shadow-md hover:bg-indigo-800 hover:shadow-lg hover:-translate-y-0.5"
+                    : "border border-slate-300 bg-white text-slate-700 shadow-sm hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
                 }`}
               >
                 แชร์ภายในหน่วยงาน
@@ -565,10 +565,10 @@ export default function SearchPage() {
               <button
                 type="button"
                 onClick={() => handleAccessFilterChange("public")}
-                className={`rounded-full border px-4 py-1.5 text-[11px] font-medium outline-none transition-colors ${
+                className={`rounded-full px-5 py-2 text-[11px] font-medium outline-none transition-all duration-150 ${
                   accessFilter === "public"
-                    ? "border-indigo-700 bg-indigo-700 text-white"
-                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                    ? "border border-indigo-700 bg-indigo-700 text-white shadow-md hover:bg-indigo-800 hover:shadow-lg hover:-translate-y-0.5"
+                    : "border border-slate-300 bg-white text-slate-700 shadow-sm hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
                 }`}
               >
                 แชร์ทั้งองค์กร
@@ -576,12 +576,11 @@ export default function SearchPage() {
               <button
                 type="button"
                 onClick={() => handleAccessFilterChange("private")}
-                className={
-                  "rounded-full border px-4 py-1.5 text-[11px] font-medium outline-none transition-colors " +
-                  (accessFilter === "private"
-                    ? "border-indigo-700 bg-indigo-700 text-white"
-                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50")
-                }
+                className={`rounded-full px-5 py-2 text-[11px] font-medium outline-none transition-all duration-150 ${
+                  accessFilter === "private"
+                    ? "border border-indigo-700 bg-indigo-700 text-white shadow-md hover:bg-indigo-800 hover:shadow-lg hover:-translate-y-0.5"
+                    : "border border-slate-300 bg-white text-slate-700 shadow-sm hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md"
+                }`}
               >
                 แชร์ส่วนตัว
               </button>
@@ -592,7 +591,7 @@ export default function SearchPage() {
                 onClick={handleReset}
                 className="group flex items-center gap-2 rounded-full bg-slate-900 px-5 py-1.5 text-[11px] font-semibold text-white shadow transition-transform duration-150 hover:-translate-y-0.5 hover:bg-black hover:shadow-lg"
               >
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-900 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-6">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-900 transition-transform duration-200 group-hover:scale-110">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -655,8 +654,9 @@ export default function SearchPage() {
           {pagedDocs.map((doc, idx) => (
             <article
               key={`${doc.id}-${safeCurrentPage}-${idx}`}
-              className={`group flex flex-col justify-between rounded-2xl border bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1.5 hover:shadow-2xl hover:-rotate-1 ${doc.color}`}
+              className={`group flex flex-col justify-between rounded-2xl border bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1.5 hover:shadow-2xl ${doc.color}`}
             >
+
               <div className="mb-3 flex items-start gap-3">
                 <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-600 text-white text-xl leading-none shadow-md transition-transform duration-200 group-hover:scale-110">
 

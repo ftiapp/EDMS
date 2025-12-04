@@ -380,9 +380,9 @@ export default function DocumentDetailPage() {
             <button
               type="button"
               onClick={handleDownload}
-              className="group flex items-center gap-2 rounded-full bg-indigo-700 px-5 py-2 text-[11px] font-semibold text-white shadow-md transition-transform duration-150 hover:-translate-y-0.5 hover:bg-indigo-800 hover:shadow-lg"
+              className="group flex items-center gap-3 rounded-full bg-indigo-700 px-7 py-2.5 text-[12px] font-semibold text-white shadow-lg transition-transform duration-150 hover:-translate-y-0.5 hover:bg-indigo-800 hover:shadow-xl"
             >
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-indigo-700 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-6">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-indigo-700 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-1">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -665,7 +665,7 @@ export default function DocumentDetailPage() {
                                 rel="noreferrer"
                                 className="group inline-flex items-center gap-2 rounded-full bg-slate-800 px-4 py-1.5 text-[11px] font-medium text-white shadow-md transition-transform duration-150 hover:-translate-y-0.5 hover:bg-slate-900 hover:shadow-lg"
                               >
-                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-800 text-[10px] transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-6">
+                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-slate-800 text-[10px] transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-1">
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 24 24"
@@ -689,7 +689,7 @@ export default function DocumentDetailPage() {
                               rel="noreferrer"
                               className="group inline-flex items-center gap-2 rounded-full bg-indigo-700 px-4 py-1.5 text-[11px] font-medium text-white shadow-md transition-transform duration-150 hover:-translate-y-0.5 hover:bg-indigo-800 hover:shadow-lg"
                             >
-                              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-indigo-700 text-[10px] transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-6">
+                              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-indigo-700 text-[10px] transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-1">
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
                                   viewBox="0 0 24 24"
@@ -739,9 +739,9 @@ export default function DocumentDetailPage() {
               <button
                 type="button"
                 onClick={handleCancelDelete}
-                className="group flex items-center gap-2 rounded-full border border-slate-300 bg-white px-7 py-2 font-medium text-slate-700 shadow-md transition-transform duration-150 hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-lg"
+                className="group flex items-center gap-2 rounded-full border border-indigo-100 bg-white px-7 py-2 font-medium text-slate-800 shadow-sm transition-transform duration-150 hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-md"
               >
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-slate-600 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-6">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-indigo-600 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-1">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -761,9 +761,9 @@ export default function DocumentDetailPage() {
               <button
                 type="button"
                 onClick={handleConfirmDelete}
-                className="group flex items-center gap-2 rounded-full bg-rose-600 px-7 py-2 font-semibold text-white shadow-md transition-transform duration-150 hover:-translate-y-0.5 hover:bg-rose-700 hover:shadow-lg"
+                className="group flex items-center gap-2 rounded-full bg-rose-600 px-7 py-2 font-semibold text-white shadow-lg transition-transform duration-150 hover:-translate-y-0.5 hover:bg-rose-700 hover:shadow-xl"
               >
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-rose-600 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-6">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-rose-600 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-1">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
