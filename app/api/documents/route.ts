@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { getDepartmentByEmail } from "@/lib/employeeDb";
 
 // GET /api/documents?email=...&department=...
 export async function GET(request: Request) {
@@ -7,7 +8,23 @@ export async function GET(request: Request) {
     const db = getDb();
     const { searchParams } = new URL(request.url);
     const email = (searchParams.get("email") || "").trim();
-    const department = (searchParams.get("department") || "").trim();
+    let department = (searchParams.get("department") || "").trim();
+
+    // ถ้ามี email แต่ไม่มี department ใน query ให้ลองดึง department จากระบบ HR
+    if (email && !department) {
+      try {
+        const empDept = await getDepartmentByEmail(email);
+        if (empDept) {
+          department =
+            empDept.departmentName ||
+            empDept.departmentNameEn ||
+            empDept.departmentCode ||
+            department;
+        }
+      } catch (err) {
+        console.error("Failed to resolve department from HR in documents GET", err);
+      }
+    }
 
     let rows;
     if (!email && !department) {

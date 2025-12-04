@@ -337,7 +337,7 @@ export default function MyDocumentsPage() {
                     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
                   </svg>
                 </span>
-                <span>เอกสารของฉัน</span>
+                <span>แก้ไขเอกสารของฉัน</span>
               </h1>
               <p className="text-[11px] text-slate-600">
                 แสดงเฉพาะเอกสารที่คุณเป็นผู้บันทึก และสามารถเข้าไปแก้ไขได้

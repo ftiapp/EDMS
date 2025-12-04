@@ -168,7 +168,7 @@ export default function Home() {
 									</svg>
 								</span>
 								<span className="flex flex-col items-start leading-tight">
-									<span className="text-[13px]">เอกสารของฉัน</span>
+									<span className="text-[13px]">แก้ไขเอกสารของฉัน</span>
 									<span className="text-[10px] opacity-60">
 										จัดการเอกสารที่คุณเป็นเจ้าของ
 									</span>

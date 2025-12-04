@@ -22,6 +22,11 @@ export default function UserNavbar() {
 
   useEffect(() => {
     if (!email) {
+      // ถ้าไม่มีอีเมล (ถือว่าเซสชันไม่สมบูรณ์) ให้กลับไปหน้า Login ของระบบพนักงาน
+      if (typeof window !== "undefined") {
+        window.location.href =
+          "https://employee-management-9yicp.kinsta.app/login";
+      }
       setDeptLabel(null);
       return;
     }
@@ -65,7 +70,7 @@ export default function UserNavbar() {
     pathname === "/search" || pathname === "/edit" || pathname === "/detail";
 
   return (
-    <header className="bg-indigo-800 text-white shadow">
+    <header className="sticky top-0 z-50 bg-indigo-800 text-white shadow">
       <div className="flex h-14 w-full items-stretch">
         <div className="flex items-stretch">
           <Link

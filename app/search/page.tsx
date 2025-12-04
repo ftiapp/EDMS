@@ -628,9 +628,10 @@ export default function SearchPage() {
                   department,
                 },
               }}
-              className="text-[12px] font-semibold text-indigo-800 hover:text-indigo-900 hover:no-underline"
+              className="text-[12px] font-semibold hover:no-underline"
             >
-              <span className="inline-flex items-center gap-1 rounded-full border border-indigo-300 bg-indigo-100 px-4 py-1.5 shadow-sm">
+              <span className="inline-flex items-center gap-2 rounded-full bg-rose-600 px-5 py-1.5 text-white shadow-md transition-transform duration-150 hover:-translate-y-0.5 hover:bg-rose-700 hover:shadow-lg">
+
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -644,7 +645,7 @@ export default function SearchPage() {
                   <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
                   <path d="M14 2v6h6" />
                 </svg>
-                <span>เอกสารของฉัน</span>
+                <span>แก้ไขเอกสารของฉัน</span>
               </span>
             </Link>
           )}
