@@ -17,9 +17,13 @@ export default function AdminTrashPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [restoringId, setRestoringId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [searchInput, setSearchInput] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [successBanner, setSuccessBanner] = useState<string | null>(null);
+  const [confirmDeleteDoc, setConfirmDeleteDoc] = useState<TrashDocument | null>(
+    null
+  );
 
   useEffect(() => {
     async function fetchTrash() {
@@ -100,6 +104,34 @@ export default function AdminTrashPage() {
     }
   };
 
+  const handlePermanentDelete = async (id: number) => {
+    try {
+      setDeletingId(id);
+      setError(null);
+
+      const res = await fetch("/api/documents/permanent-delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to permanently delete document");
+      }
+
+      setDocuments((prev) => prev.filter((doc) => doc.id !== id));
+      setConfirmDeleteDoc(null);
+      setSuccessBanner("ลบเอกสารออกจากถังขยะถาวรแล้ว");
+    } catch (err) {
+      console.error("Admin permanent delete document error", err);
+      setError("ไม่สามารถลบเอกสารถาวรได้");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {successBanner && (
@@ -126,7 +158,7 @@ export default function AdminTrashPage() {
 
       <section className="space-y-1">
         <h1 className="text-lg font-semibold text-slate-900">
-          ถังขยะเอกสาร (Trash)
+          ถังขยะเอกสาร 
         </h1>
         <p className="text-[11px] text-slate-600">
           แสดงรายการเอกสารที่ถูกลบออกจากระบบ แต่ยังสามารถกู้คืนกลับมาใช้งานได้
@@ -173,6 +205,58 @@ export default function AdminTrashPage() {
         </div>
       )}
 
+      {confirmDeleteDoc && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-md rounded-2xl border border-rose-200 bg-white px-5 py-4 text-[11px] text-rose-800 shadow-xl">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-white">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  className="h-3.5 w-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                  <line x1="10" y1="11" x2="10" y2="17" />
+                  <line x1="14" y1="11" x2="14" y2="17" />
+                </svg>
+              </span>
+              <span className="font-semibold text-rose-700">ยืนยันการลบออกจากถังขยะ</span>
+            </div>
+            <p className="text-[11px] text-rose-700">
+              คุณต้องการลบเอกสาร "{confirmDeleteDoc.title}" ออกจากถังขยะแบบถาวรหรือไม่?
+            </p>
+            <p className="mt-1 text-[11px] font-semibold text-rose-700">
+              การลบนี้ไม่สามารถกู้คืนได้
+            </p>
+            <div className="mt-4 flex justify-end gap-2 text-[10px]">
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteDoc(null)}
+                className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-[10px] font-medium text-slate-700 hover:bg-slate-50"
+                disabled={deletingId === confirmDeleteDoc.id}
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePermanentDelete(confirmDeleteDoc.id)}
+                className="rounded-full bg-rose-600 px-4 py-1.5 text-[10px] font-semibold text-white shadow-sm hover:bg-rose-700 disabled:opacity-60"
+                disabled={deletingId === confirmDeleteDoc.id}
+              >
+                {deletingId === confirmDeleteDoc.id ? "กำลังลบถาวร..." : "ยืนยันการลบถาวร"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[11px] text-slate-600 shadow-sm">
           กำลังโหลดรายการเอกสารถูกลบ...
@@ -205,7 +289,7 @@ export default function AdminTrashPage() {
                 key={doc.id}
                 className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:border-indigo-200 hover:bg-indigo-50/60"
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex min-w-0 flex-1 items-start gap-3">
                     <span className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-full bg-rose-600 text-white shadow">
                       <svg
@@ -251,14 +335,14 @@ export default function AdminTrashPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end gap-1">
+                  <div className="flex flex-row items-stretch justify-center gap-2 mx-auto">
                     <button
                       type="button"
                       onClick={() => handleRestore(doc.id)}
-                      className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-emerald-600 px-4 py-1.5 text-[10px] font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60"
+                      className="inline-flex flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-full bg-emerald-600 px-3 py-1.5 text-[10px] font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60"
                       disabled={restoringId === doc.id}
                     >
-                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white">
+                      <span className="flex h-3 w-3 items-center justify-center rounded-full bg-white">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 24 24"
@@ -273,8 +357,35 @@ export default function AdminTrashPage() {
                           <path d="M3 4v8h8" />
                         </svg>
                       </span>
-                      <span>
+                      <span className="text-center">
                         {restoringId === doc.id ? "กำลังกู้คืน..." : "กู้คืนเอกสาร"}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteDoc(doc)}
+                      className="inline-flex flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-full bg-rose-600 px-3 py-1.5 text-[10px] font-semibold text-white shadow-sm hover:bg-rose-700 disabled:opacity-60"
+                      disabled={deletingId === doc.id}
+                    >
+                      <span className="flex h-3 w-3 items-center justify-center rounded-full bg-white">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          className="h-2.5 w-2.5 text-rose-600"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M3 6h18" />
+                          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                        </svg>
+                      </span>
+                      <span className="text-center">
+                        {deletingId === doc.id ? "กำลังลบถาวร..." : "ลบถาวร"}
                       </span>
                     </button>
                   </div>

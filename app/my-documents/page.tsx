@@ -101,6 +101,7 @@ export default function MyDocumentsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const email = (searchParams.get("email") ?? "").trim();
+  const token = (searchParams.get("token") ?? "").trim();
   const department = (searchParams.get("department") ?? "").trim();
 
   const [loading, setLoading] = useState(false);
@@ -601,11 +602,14 @@ export default function MyDocumentsPage() {
                             tags: `${doc.tags ?? ""} ${doc.department ?? ""}`,
                             description: doc.description ?? "",
                             email,
+                            token,
                             fileUrl: allFileUrls[0] ?? "",
                             fileUrls: JSON.stringify(allFileUrls),
                             originalNames: JSON.stringify(originalNames),
                           },
                         }}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="group inline-flex items-center justify-center gap-2 rounded-full bg-indigo-600 px-6 py-2 text-white shadow-md transition-transform duration-150 hover:-translate-y-0.5 hover:bg-indigo-700 hover:shadow-lg"
                       >
                         <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/90 text-indigo-600 transition-transform duration-200 group-hover:scale-110">
@@ -635,6 +639,7 @@ export default function MyDocumentsPage() {
                             tags: doc.tags ?? "",
                             description: doc.description ?? "",
                             email,
+                            token,
                           },
                         }}
                         className="group inline-flex items-center justify-center gap-2 rounded-full bg-rose-500 px-6 py-2 text-white shadow-md transition-transform duration-150 hover:-translate-y-0.5 hover:bg-rose-600 hover:shadow-lg"

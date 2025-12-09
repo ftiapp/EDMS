@@ -12,6 +12,7 @@ interface DbDocument {
   file_url: string;
   created_at: string;
   edited_at?: string | null;
+  original_filenames?: string | null;
 }
 
 export default function AdminDocumentsPage() {
@@ -36,6 +37,9 @@ export default function AdminDocumentsPage() {
     description: "",
   });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [existingFilesMap, setExistingFilesMap] = useState<
+    Record<number, { url: string; name: string }[]>
+  >({});
   const [searchInput, setSearchInput] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -111,7 +115,7 @@ export default function AdminDocumentsPage() {
       try {
         setIsLoading(true);
         setError(null);
-        const res = await fetch("/api/documents");
+        const res = await fetch("/api/admin/documents");
         if (!res.ok) throw new Error("Failed to fetch documents");
         const data = await res.json();
         const docs = (data.documents || []) as DbDocument[];
@@ -138,6 +142,54 @@ export default function AdminDocumentsPage() {
     setActionError(null);
     setActionSuccess(null);
     setSelectedFiles([]);
+
+    // เตรียมข้อมูลไฟล์เดิมของเอกสาร สำหรับให้แอดมินจัดการได้เหมือนหน้าผู้ใช้
+    try {
+      let urls: string[] = [];
+      let names: string[] = [];
+
+      if (doc.file_url) {
+        try {
+          const parsed = JSON.parse(doc.file_url);
+          if (Array.isArray(parsed)) {
+            urls = parsed.filter((u): u is string => typeof u === "string");
+          }
+        } catch {
+          if (typeof doc.file_url === "string") {
+            urls = [doc.file_url];
+          }
+        }
+      }
+
+      if (doc.original_filenames) {
+        try {
+          const parsedNames = JSON.parse(doc.original_filenames);
+          if (Array.isArray(parsedNames)) {
+            names = parsedNames.filter(
+              (n): n is string => typeof n === "string" && n.length > 0
+            );
+          }
+        } catch {
+          // ignore ถ้า parse ไม่ได้
+        }
+      }
+
+      const combined = urls.map((url, idx) => ({
+        url,
+        name: names[idx] || `ไฟล์ที่ ${idx + 1}`,
+      }));
+
+      setExistingFilesMap((prev) => ({
+        ...prev,
+        [doc.id]: combined,
+      }));
+    } catch {
+      // ถ้ามีปัญหาให้ปล่อยว่าง ไม่ให้กระทบการแก้ไขอื่น
+      setExistingFilesMap((prev) => ({
+        ...prev,
+        [doc.id]: prev[doc.id] || [],
+      }));
+    }
   };
 
   const cancelEdit = () => {
@@ -173,10 +225,22 @@ export default function AdminDocumentsPage() {
       setActionSuccess(null);
       setGlobalLoadingMessage("กำลังบันทึกการแก้ไขเอกสาร โปรดรอสักครู่...");
 
-      // ถ้ามีไฟล์ใหม่ ให้เรียกอัปเดตไฟล์แนบก่อน
-      if (selectedFiles.length > 0) {
+      // อัปเดตไฟล์แนบให้รองรับทั้งไฟล์เดิมและไฟล์ใหม่ (ลบไฟล์เดิมบางไฟล์ได้)
+      const existingFilesForDoc = existingFilesMap[id] || [];
+      if (selectedFiles.length > 0 || existingFilesForDoc.length >= 0) {
         const fileForm = new FormData();
         fileForm.set("id", String(id));
+
+        // ส่งไฟล์เดิมที่ต้องการเก็บไว้ไปด้วย (เหมือนหน้า edit ของผู้ใช้)
+        fileForm.set(
+          "existingUrls",
+          JSON.stringify(existingFilesForDoc.map((f) => f.url))
+        );
+        fileForm.set(
+          "existingNames",
+          JSON.stringify(existingFilesForDoc.map((f) => f.name))
+        );
+
         selectedFiles.forEach((f) => fileForm.append("files", f));
 
         const fileRes = await fetch("/api/documents/update-files", {
@@ -189,7 +253,7 @@ export default function AdminDocumentsPage() {
         }
       }
 
-      const res = await fetch(`/api/documents?id=${id}`, {
+      const res = await fetch(`/api/admin/documents?id=${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, department, access_level, description, tags }),
@@ -205,6 +269,10 @@ export default function AdminDocumentsPage() {
       );
       setEditingId(null);
       setSelectedFiles([]);
+      setExistingFilesMap((prev) => ({
+        ...prev,
+        [id]: prev[id] || existingFilesForDoc,
+      }));
       setActionSuccess("บันทึกการแก้ไขเสร็จสิ้น");
       setSuccessBanner("บันทึกการแก้ไขเอกสารเรียบร้อยแล้ว");
     } catch (err) {
@@ -222,7 +290,7 @@ export default function AdminDocumentsPage() {
       setActionError(null);
       setActionSuccess(null);
       setGlobalLoadingMessage("กำลังลบเอกสาร โปรดรอสักครู่...");
-      const res = await fetch(`/api/documents?id=${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/documents?id=${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete document");
 
       setDocuments((prev) => prev.filter((doc) => doc.id !== id));
@@ -368,7 +436,25 @@ export default function AdminDocumentsPage() {
       {confirmDeleteDoc && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-md rounded-2xl border border-rose-200 bg-white px-5 py-4 text-[11px] text-rose-800 shadow-xl">
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-600 text-white">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  className="h-3.5 w-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                  <line x1="10" y1="11" x2="10" y2="17" />
+                  <line x1="14" y1="11" x2="14" y2="17" />
+                </svg>
+              </span>
               <span className="font-semibold text-rose-700">ยืนยันการลบเอกสาร</span>
             </div>
             <p className="text-[11px] text-rose-700">
@@ -429,6 +515,8 @@ export default function AdminDocumentsPage() {
               accessColorClass = "bg-amber-100 text-amber-800";
             }
 
+            const existingFiles = existingFilesMap[doc.id] || [];
+
             return (
               <li
                 key={doc.id}
@@ -459,79 +547,83 @@ export default function AdminDocumentsPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => window.open(`/admin/detail?id=${doc.id}`, "_blank")}
-                      className="inline-flex items-center gap-1 rounded-full bg-indigo-500 px-3 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-indigo-600 disabled:opacity-60"
-                      title="ดูรายละเอียดเอกสารในหน้าแอดมิน"
-                    >
-                      <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/90">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          className="h-2.5 w-2.5 text-indigo-600"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M2 12s3-7.5 10-7.5 10 7.5 10 7.5-3 7.5-10 7.5-10-7.5-10-7.5z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
-                      </span>
-                      <span>ดูเอกสาร</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => startEdit(doc)}
-                      className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-3 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-emerald-600 disabled:opacity-60"
-                      disabled={savingId !== null && savingId !== doc.id}
-                    >
-                      <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          className="h-2.5 w-2.5 text-emerald-600"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M12 20h9" />
-                          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                        </svg>
-                      </span>
-                      <span>แก้ไข</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmDeleteDoc(doc)}
-                      className="inline-flex items-center gap-1 rounded-full bg-rose-500 px-3 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-rose-600 disabled:opacity-60"
-                      disabled={savingId === doc.id}
-                    >
-                      <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          className="h-2.5 w-2.5 text-rose-600"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M3 6h18" />
-                          <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                          <line x1="10" y1="11" x2="10" y2="17" />
-                          <line x1="14" y1="11" x2="14" y2="17" />
-                        </svg>
-                      </span>
-                      <span>ลบ</span>
-                    </button>
+                  <div className="flex w-full flex-col gap-1 md:w-auto md:flex-row md:items-center md:justify-end">
+                    <div className="flex w-full gap-2 md:w-auto">
+                      <button
+                        type="button"
+                        onClick={() => window.open(`/admin/detail?id=${doc.id}`, "_blank")}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-indigo-500 px-3 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-indigo-600 disabled:opacity-60 md:w-auto"
+                        title="ดูรายละเอียดเอกสารในหน้าแอดมิน"
+                      >
+                        <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white/90 flex-none">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            className="h-2.5 w-2.5 text-indigo-600"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M2 12s3-7.5 10-7.5 10 7.5 10 7.5-3 7.5-10 7.5-10-7.5-10-7.5z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                        </span>
+                        <span className="text-center">ดูเอกสาร</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => startEdit(doc)}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-500 px-3 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-emerald-600 disabled:opacity-60 md:w-auto"
+                        disabled={savingId !== null && savingId !== doc.id}
+                      >
+                        <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white flex-none">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            className="h-2.5 w-2.5 text-emerald-600"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                          </svg>
+                        </span>
+                        <span className="text-center">แก้ไข</span>
+                      </button>
+                    </div>
+                    <div className="w-full md:w-auto">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteDoc(doc)}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-rose-500 px-3 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-rose-600 disabled:opacity-60 md:w-auto"
+                        disabled={savingId === doc.id}
+                      >
+                        <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white flex-none">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            className="h-2.5 w-2.5 text-rose-600"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M3 6h18" />
+                            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                            <line x1="10" y1="11" x2="10" y2="17" />
+                            <line x1="14" y1="11" x2="14" y2="17" />
+                          </svg>
+                        </span>
+                        <span className="text-center">ลบ</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -750,6 +842,77 @@ export default function AdminDocumentsPage() {
                                 </div>
                               );
                             })}
+                          </div>
+                        </div>
+                      )}
+                      {existingFiles.length > 0 && (
+                        <div className="mt-2 space-y-1 text-[9px] text-slate-700">
+                          <label className="text-[10px] font-semibold text-slate-800">
+                            ไฟล์เอกสารเดิมที่แนบอยู่ ({existingFiles.length} ไฟล์)
+                          </label>
+                          <div className="max-h-28 space-y-1 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 px-2 py-2">
+                            {existingFiles.map((file, index) => (
+                              <div
+                                key={file.url + index}
+                                className="flex items-center justify-between gap-2 rounded-md bg-white px-2 py-1 shadow-sm"
+                              >
+                                <div className="flex min-w-0 flex-1 items-center gap-2">
+                                  <span className="flex h-5 w-5 items-center justify-center rounded-md bg-indigo-50 text-[9px] text-indigo-700">
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      viewBox="0 0 24 24"
+                                      className="h-3 w-3"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
+                                      <path d="M14 2v6h6" />
+                                    </svg>
+                                  </span>
+                                  <span className="truncate text-[10px] font-medium text-slate-800">
+                                    {file.name}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <a
+                                    href={file.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="whitespace-nowrap rounded-full bg-slate-800 px-3 py-0.5 text-[9px] font-medium text-white hover:bg-black"
+                                  >
+                                    เปิดดู
+                                  </a>
+                                  <button
+                                    type="button"
+                                    className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-100 text-[9px] text-rose-700 hover:bg-rose-200"
+                                    onClick={() => {
+                                      setExistingFilesMap((prev) => ({
+                                        ...prev,
+                                        [doc.id]: (prev[doc.id] || []).filter((_, i) => i !== index),
+                                      }));
+                                    }}
+                                    title="ลบไฟล์เดิมนี้ออกจากเอกสาร"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      viewBox="0 0 24 24"
+                                      className="h-3 w-3"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <path d="M18 6 6 18" />
+                                      <path d="M6 6l12 12" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}

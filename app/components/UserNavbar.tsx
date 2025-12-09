@@ -17,7 +17,11 @@ export default function UserNavbar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") ?? "";
-  const query = email ? `?email=${encodeURIComponent(email)}` : "";
+  const token = searchParams.get("token") ?? "";
+  const query =
+    email && token
+      ? `?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`
+      : "";
   const [deptLabel, setDeptLabel] = useState<string | null>(null);
 
   useEffect(() => {
@@ -90,10 +94,10 @@ export default function UserNavbar() {
           <div className="header-logo-notch h-full w-12 bg-white sm:w-16" />
         </div>
 
-        <nav className="ml-auto flex items-center gap-1 rounded-full bg-indigo-900/30 px-1.5 py-1.5 text-[11px] font-medium sm:gap-3 sm:bg-transparent sm:px-8 sm:py-0">
+        <nav className="ml-auto flex items-center gap-1 rounded-full bg-indigo-900/40 px-1.5 py-1.5 text-[11px] font-medium sm:gap-3 sm:bg-transparent sm:px-8 sm:py-0">
           {email && (
-            <div className="mr-2 hidden items-center rounded-2xl border border-slate-200 bg-white/95 px-3.5 py-1.5 text-[11px] text-slate-900 shadow-sm sm:flex">
-              <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-600 text-white">
+            <div className="mr-2 hidden items-center rounded-full bg-white/95 px-3.5 py-1.5 text-[11px] text-slate-900 shadow-md ring-1 ring-white/60 sm:flex">
+              <div className="mr-2 flex h-8 w-8 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-sm">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -108,13 +112,13 @@ export default function UserNavbar() {
                   <path d="M5 19a7 7 0 0 1 14 0" />
                 </svg>
               </div>
-              <div className="flex max-w-[210px] flex-col leading-tight">
+              <div className="flex max-w-[210px] flex-col items-center justify-center leading-tight text-center">
                 <span className="truncate text-[11px] font-semibold text-slate-900">
                   {email}
                 </span>
                 {deptLabel && (
-                  <span className="mt-0.5 flex items-center gap-1 truncate text-[10px] text-slate-500">
-                    <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
+                  <span className="mt-0.5 flex items-center justify-center gap-1 truncate text-[10px] text-slate-500">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_0_2px_rgba(255,255,255,0.7)]" />
                     <span className="truncate">{deptLabel}</span>
                   </span>
                 )}

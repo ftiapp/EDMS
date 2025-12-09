@@ -18,6 +18,7 @@ type DepartmentInfo = {
 export default function Home() {
 	const searchParams = useSearchParams()
 	const email = searchParams.get("email") ?? ""
+	const token = searchParams.get("token") ?? ""
 	const [department, setDepartment] = useState<DepartmentInfo | null>(null)
 	const [loadingDept, setLoadingDept] = useState(false)
 	const [deptError, setDeptError] = useState<string | null>(null)
@@ -85,7 +86,11 @@ export default function Home() {
 
 					<div className="flex flex-col items-center gap-3 text-xs font-medium md:flex-row md:flex-nowrap md:items-center md:justify-center md:gap-4">
 						<Link
-								href={email ? `/document?email=${encodeURIComponent(email)}` : "/document"}
+								href={
+									email && token
+										? `/document?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`
+										: "/document"
+								}
 								className="group mx-auto flex w-full max-w-xs items-center justify-start gap-3 rounded-full bg-emerald-600 px-5 py-2.5 text-white shadow transition-transform duration-150 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg md:mx-0 md:w-[230px]"
 							>
 								<span className="flex h-6 w-6 items-center justify-center rounded-full bg-white transition-transform duration-200 group-hover:scale-110 group-hover:rotate-6">
@@ -112,13 +117,15 @@ export default function Home() {
 								</span>
 							</Link>
 						<Link
-								href={email
-									? `/search?email=${encodeURIComponent(email)}${
-											department?.departmentName
-												? `&department=${encodeURIComponent(department.departmentName)}`
-												: ""
-										}`
-									: "/search"}
+								href={
+									email && token
+										? `/search?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}${
+													department?.departmentName
+														? `&department=${encodeURIComponent(department.departmentName)}`
+														: ""
+												}`
+										: "/search"
+								}
 								className="group mx-auto flex w-full max-w-xs items-center justify-start gap-3 rounded-full bg-indigo-700 px-4 py-2.5 text-white shadow transition-transform duration-150 hover:-translate-y-0.5 hover:bg-indigo-800 hover:shadow-lg md:mx-0 md:w-[200px]"
 							>
 								<span className="flex h-6 w-6 items-center justify-center rounded-full bg-white transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-6">
@@ -144,13 +151,15 @@ export default function Home() {
 								</span>
 							</Link>
 						<Link
-								href={email
-									? `/my-documents?email=${encodeURIComponent(email)}${
-												department?.departmentName
-													? `&department=${encodeURIComponent(department.departmentName)}`
-													: ""
+								href={
+									email && token
+										? `/my-documents?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}${
+													department?.departmentName
+														? `&department=${encodeURIComponent(department.departmentName)}`
+														: ""
 											}`
-									: "/my-documents"}
+										: "/my-documents"
+								}
 								className="group mx-auto flex w-full max-w-xs items-center justify-start gap-3 rounded-full bg-slate-900 px-4 py-2.5 text-white shadow transition-transform duration-150 hover:-translate-y-0.5 hover:bg-black hover:shadow-lg md:mx-0 md:w-[200px]"
 							>
 								<span className="flex h-6 w-6 items-center justify-center rounded-full bg-white transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3">

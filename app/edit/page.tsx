@@ -49,6 +49,7 @@ export default function EditDocumentPage() {
   const [currentDateTime, setCurrentDateTime] = useState("");
   const [currentDateTimeThai, setCurrentDateTimeThai] = useState("");
   const ownerEmail = (searchParams.get("email") ?? "").trim();
+  const token = (searchParams.get("token") ?? "").trim();
   const [initialTitle] = useState(() => searchParams.get("title") ?? "");
   const [initialDepartment] = useState(() => searchParams.get("department") ?? "");
   const [initialTags] = useState(() => searchParams.get("tags") ?? "");
@@ -259,21 +260,18 @@ export default function EditDocumentPage() {
       setTimeout(() => {
         const idParam = searchParams.get("id");
         if (idParam) {
-          if (ownerEmail) {
-            router.push(
-              `/detail?id=${encodeURIComponent(idParam)}&email=${encodeURIComponent(
-                ownerEmail
-              )}`
-            );
-          } else {
-            router.push(`/detail?id=${encodeURIComponent(idParam)}`);
-          }
+          const params = new URLSearchParams();
+          params.set("id", idParam);
+          if (ownerEmail) params.set("email", ownerEmail);
+          if (token) params.set("token", token);
+          const query = params.toString();
+          router.push(query ? `/detail?${query}` : "/detail");
         } else {
-          if (ownerEmail) {
-            router.push(`/search?email=${encodeURIComponent(ownerEmail)}`);
-          } else {
-            router.push("/search");
-          }
+          const params = new URLSearchParams();
+          if (ownerEmail) params.set("email", ownerEmail);
+          if (token) params.set("token", token);
+          const query = params.toString();
+          router.push(query ? `/search?${query}` : "/search");
         }
       }, 1200);
     } catch (err) {

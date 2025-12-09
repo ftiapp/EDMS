@@ -47,6 +47,7 @@ export default function SearchPage() {
   const initialAccess = searchParams.get("access") ?? "";
   const email = searchParams.get("email") ?? "";
   const department = searchParams.get("department") ?? "";
+  const token = searchParams.get("token") ?? "";
 
   const [qInput, setQInput] = useState(initialQ);
   const [startInput, setStartInput] = useState(initialStart);
@@ -165,6 +166,7 @@ export default function SearchPage() {
     async function fetchDocuments() {
       try {
         const params = new URLSearchParams();
+
         if (email) params.set("email", email);
         if (department) params.set("department", department);
         const query = params.toString();
@@ -345,6 +347,7 @@ export default function SearchPage() {
     if (nextAccess) params.set("access", nextAccess);
     if (email) params.set("email", email);
     if (department) params.set("department", department);
+    if (token) params.set("token", token);
 
     const query = params.toString();
     router.push(query ? `/search?${query}` : "/search", { scroll: false });
@@ -363,6 +366,7 @@ export default function SearchPage() {
     if (accessFilter) params.set("access", accessFilter);
     if (email) params.set("email", email);
     if (department) params.set("department", department);
+    if (token) params.set("token", token);
 
     const query = params.toString();
     setCurrentPage(1);
@@ -379,6 +383,8 @@ export default function SearchPage() {
     const params = new URLSearchParams();
     if (email) params.set("email", email);
     if (department) params.set("department", department);
+    if (token) params.set("token", token);
+
     const query = params.toString();
     router.push(query ? `/search?${query}` : "/search");
   }
@@ -624,6 +630,7 @@ export default function SearchPage() {
                 query: {
                   email,
                   department,
+                  token,
                 },
               }}
               className="text-[12px] font-semibold hover:no-underline"
@@ -864,8 +871,11 @@ export default function SearchPage() {
                         fileUrls: JSON.stringify(doc.allFileUrls),
                         originalNames: JSON.stringify(doc.originalNames),
                         email,
+                        token,
                       },
                     }}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="group inline-flex items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 py-1.5 text-white shadow-md transition-transform duration-150 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-lg"
                   >
                     <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white text-emerald-700 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-6">

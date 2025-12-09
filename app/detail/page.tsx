@@ -44,6 +44,7 @@ export default function DocumentDetailPage() {
 
   const idParam = searchParams.get("id");
   const email = (searchParams.get("email") ?? "").trim();
+  const token = (searchParams.get("token") ?? "").trim();
 
   // โหลดข้อมูลจาก DB ตาม id เมื่อไม่มีข้อมูลครบจาก query
   useEffect(() => {
@@ -336,7 +337,11 @@ export default function DocumentDetailPage() {
         setDeleteMessage(`ดำเนินการลบเอกสาร "${title}" สำเร็จแล้ว`);
         setTimeout(() => {
           setDeleteMessage(null);
-          router.push(email ? `/search?email=${encodeURIComponent(email)}` : "/search");
+          const params = new URLSearchParams();
+          if (email) params.set("email", email);
+          if (token) params.set("token", token);
+          const query = params.toString();
+          router.push(query ? `/search?${query}` : "/search");
         }, 1500);
       } catch (error) {
         console.error("Delete error", error);

@@ -70,7 +70,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     <polygon points="16 8 12 16 8 12 16 8" />
                   </svg>
                 </span>
-                <span>Dashboard</span>
+                <span>แดชบอร์ด</span>
               </Link>
 
               {/* ปุ่มถังขยะเอกสาร */}
@@ -101,7 +101,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     <line x1="14" y1="11" x2="14" y2="17" />
                   </svg>
                 </span>
-                <span>Trash</span>
+                <span>ถังขยะ</span>
               </Link>
 
               {/* ปุ่มจัดการเอกสารทั้งหมด */}
@@ -129,7 +129,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     <path d="M14 2v6h6" />
                   </svg>
                 </span>
-                <span>Documents</span>
+                <span>คลังเอกสาร</span>
               </Link>
             </nav>
           </div>

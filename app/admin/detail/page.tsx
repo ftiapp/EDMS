@@ -45,7 +45,8 @@ export default function AdminDocumentDetailPage() {
 
     const fetchFromDb = async () => {
       try {
-        const res = await fetch("/api/documents");
+        // ใช้ API ฝั่งแอดมินเพื่อให้เห็นเอกสารทั้งหมดที่ผู้ดูแลระบบเข้าถึงได้
+        const res = await fetch("/api/admin/documents");
         if (!res.ok) return;
         const data = await res.json();
         const docs = (data.documents || []) as DbDocument[];
@@ -220,30 +221,6 @@ export default function AdminDocumentDetailPage() {
       )}
 
       <section className="rounded-2xl border border-slate-200 bg-white px-6 py-5 text-xs shadow-sm">
-        <div className="mb-4 flex items-center justify-between text-[11px]">
-          <button
-            type="button"
-            onClick={() => router.push("/admin/documents")}
-            className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-2 text-[11px] font-semibold text-white shadow-md hover:bg-amber-600"
-          >
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/95 text-amber-600">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                className="h-3 w-3"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-            </span>
-            <span>ย้อนกลับ</span>
-          </button>
-        </div>
-
         <div className="mb-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-slate-800">
             <span className="text-indigo-600">

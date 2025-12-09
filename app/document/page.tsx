@@ -44,6 +44,7 @@ export default function DocumentUploadPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") ?? "";
+  const token = searchParams.get("token") ?? "";
   const [isUploading, setIsUploading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -746,7 +747,9 @@ export default function DocumentUploadPage() {
                   setShowSuccessModal(false);
                   const params = new URLSearchParams();
                   if (email) params.set("email", email);
-                  if (resolvedDepartment) params.set("department", resolvedDepartment);
+                  if (resolvedDepartment)
+                    params.set("department", resolvedDepartment);
+                  if (token) params.set("token", token);
                   const query = params.toString();
                   router.push(query ? `/search?${query}` : "/search");
                 }}

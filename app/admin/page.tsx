@@ -130,7 +130,7 @@ export default function AdminDashboardPage() {
       try {
         setIsLoading(true);
         setError(null);
-        const res = await fetch("/api/documents");
+        const res = await fetch("/api/admin/documents");
         if (!res.ok) throw new Error("Failed to fetch documents");
         const data = await res.json();
         const dbDocs = (data.documents || []) as DbDocument[];
@@ -305,7 +305,7 @@ export default function AdminDashboardPage() {
 
     const latestDocs = [...documents]
       .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""))
-      .slice(0, 5);
+      .slice(0, 6);
 
     // เตรียมโครงสำหรับกราฟเส้นรายเดือน (ย้อนหลัง 6 เดือน)
     const monthBuckets: MonthlyFilePoint[] = [];
@@ -809,7 +809,7 @@ export default function AdminDashboardPage() {
 
             <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-[11px] shadow-sm">
               <div className="mb-2 flex items-center justify-between">
-                <span className="font-semibold text-slate-800">เอกสารล่าสุด (5 รายการ)</span>
+                <span className="font-semibold text-slate-800">เอกสารล่าสุด 6 รายการ</span>
               </div>
 
               {latestDocs.length === 0 ? (
@@ -863,58 +863,6 @@ export default function AdminDashboardPage() {
                             <span className="whitespace-nowrap rounded-full bg-indigo-100 px-3 py-1 text-[10px] font-medium text-indigo-700">
                               {displayDate}
                             </span>
-
-                            <div className="flex gap-1">
-                              <button
-                                type="button"
-                                onClick={() => startEdit(doc)}
-                                className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-emerald-600 disabled:opacity-60"
-                                disabled={savingDocId !== null && savingDocId !== doc.id}
-                              >
-                                <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    className="h-2.5 w-2.5 text-emerald-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <path d="M12 20h9" />
-                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                                  </svg>
-                                </span>
-                                <span>แก้ไข</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setConfirmDeleteDoc(doc)}
-                                className="inline-flex items-center gap-1 rounded-full bg-rose-500 px-2 py-1 text-[10px] font-semibold text-white shadow-sm hover:bg-rose-600 disabled:opacity-60"
-                                disabled={savingDocId !== null}
-                              >
-                                <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    className="h-2.5 w-2.5 text-rose-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <path d="M3 6h18" />
-                                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                                    <line x1="10" y1="11" x2="10" y2="17" />
-                                    <line x1="14" y1="11" x2="14" y2="17" />
-                                  </svg>
-                                </span>
-                                <span>ลบ</span>
-                              </button>
-                            </div>
                           </div>
                         </div>
 
