@@ -16,8 +16,8 @@ export async function GET() {
               access_level,
               file_url,
               original_filenames,
-              created_at,
-              edited_at
+              DATE_FORMAT(created_at, '%Y-%m-%dT%H:%i:%sZ') AS created_at,
+              IFNULL(DATE_FORMAT(edited_at, '%Y-%m-%dT%H:%i:%sZ'), NULL) AS edited_at
        FROM edms_documents
        WHERE is_deleted = 0
        ORDER BY created_at DESC, id DESC`
@@ -73,7 +73,7 @@ export async function PUT(request: Request) {
            tags = ?,
            description = ?,
            access_level = COALESCE(?, access_level),
-           edited_at = NOW()
+           edited_at = UTC_TIMESTAMP()
        WHERE id = ?`,
       [title, department, tags ?? null, description ?? null, access_level ?? null, id]
     );

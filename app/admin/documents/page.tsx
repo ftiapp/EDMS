@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatThaiDateTimeOrDash } from "@/lib/datetime";
 
 interface DbDocument {
   id: number;
@@ -19,6 +20,7 @@ export default function AdminDocumentsPage() {
   const [documents, setDocuments] = useState<DbDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const [editingId, setEditingId] = useState<number | null>(null);
   const [savingId, setSavingId] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -43,64 +45,7 @@ export default function AdminDocumentsPage() {
   const [searchInput, setSearchInput] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const formatThaiDateTime = (raw: string | null | undefined): string => {
-    if (!raw) return "-";
-    try {
-      const match = raw.match(
-        /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/
-      );
-      let d: Date;
-      if (match) {
-        const [, y, m, day, hh, mm, ss] = match;
-        const year = Number(y);
-        const monthIndex = Number(m) - 1;
-        const dateNum = Number(day);
-        const hour = Number(hh);
-        const minute = Number(mm);
-        const second = Number(ss);
-        const utcMs = Date.UTC(
-          year,
-          monthIndex,
-          dateNum,
-          hour,
-          minute,
-          second
-        );
-        d = new Date(utcMs + 7 * 60 * 60 * 1000);
-      } else {
-        d = new Date(raw);
-      }
-
-      if (Number.isNaN(d.getTime())) return raw;
-
-      const monthsTh = [
-        "ม.ค.",
-        "ก.พ.",
-        "มี.ค.",
-        "เม.ย.",
-        "พ.ค.",
-        "มิ.ย.",
-        "ก.ค.",
-        "ส.ค.",
-        "ก.ย.",
-        "ต.ค.",
-        "พ.ย.",
-        "ธ.ค.",
-      ];
-
-      const yyyy = d.getFullYear();
-      const mmIndex = d.getMonth();
-      const ddNum = d.getDate();
-      const hh2 = String(d.getHours()).padStart(2, "0");
-      const min2 = String(d.getMinutes()).padStart(2, "0");
-      const beYear = yyyy + 543;
-      const monthName = monthsTh[mmIndex] ?? "";
-
-      return `${ddNum} ${monthName} ${beYear} ${hh2}:${min2} น.`;
-    } catch {
-      return raw;
-    }
-  };
+  const formatThaiDateTime = formatThaiDateTimeOrDash;
 
   useEffect(() => {
     if (!successBanner) return;

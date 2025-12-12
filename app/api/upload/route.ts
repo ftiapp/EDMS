@@ -127,7 +127,7 @@ export async function POST(req: Request) {
         original_filenames,
         created_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())
     `;
 
     await db.execute(sql, [

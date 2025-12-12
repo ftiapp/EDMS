@@ -5,6 +5,7 @@ import UserNavbar from "../components/UserNavbar";
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState, type FormEvent } from "react";
+import { formatThaiDateTime, toBangkokDateString } from "@/lib/datetime";
 
 type DbDocument = {
   id: number;
@@ -61,105 +62,10 @@ function SearchPageInner() {
 
   const q = qInput.toLowerCase();
 
-  function formatThaiDateTime(raw: string | null | undefined): string {
-    if (!raw) return "ไม่พบวันที่บันทึกเอกสาร";
-    try {
-      const match = raw.match(
-        /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/
-      );
-      let d: Date;
-      if (match) {
-        const [, y, m, day, hh, mm, ss] = match;
-        const year = Number(y);
-        const monthIndex = Number(m) - 1;
-        const dateNum = Number(day);
-        const hour = Number(hh);
-        const minute = Number(mm);
-        const second = Number(ss);
-        const utcMs = Date.UTC(
-          year,
-          monthIndex,
-          dateNum,
-          hour,
-          minute,
-          second
-        );
-        d = new Date(utcMs + 7 * 60 * 60 * 1000);
-      } else {
-        d = new Date(raw);
-      }
-
-      if (Number.isNaN(d.getTime())) return raw;
-
-      const monthsTh = [
-        "ม.ค.",
-        "ก.พ.",
-        "มี.ค.",
-        "เม.ย.",
-        "พ.ค.",
-        "มิ.ย.",
-        "ก.ค.",
-        "ส.ค.",
-        "ก.ย.",
-        "ต.ค.",
-        "พ.ย.",
-        "ธ.ค.",
-      ];
-
-      const yyyy = d.getFullYear();
-      const mmIndex = d.getMonth();
-      const ddNum = d.getDate();
-      const hh2 = String(d.getHours()).padStart(2, "0");
-      const min2 = String(d.getMinutes()).padStart(2, "0");
-      const beYear = yyyy + 543;
-      const monthName = monthsTh[mmIndex] ?? "";
-
-      return `${ddNum} ${monthName} ${beYear} ${hh2}:${min2} น.`;
-    } catch {
-      return raw;
-    }
-  }
-
   // แปลงวันที่/เวลาจากฐานข้อมูลให้เป็นวันที่แบบท้องถิ่น (รูปแบบ yyyy-mm-dd)
   // เพื่อใช้ในการกรองช่วงวันที่ให้ตรงกับค่าที่ผู้ใช้เลือกจาก input type="date"
   function toLocalDateString(raw: string | null | undefined): string | null {
-    if (!raw) return null;
-    try {
-      const match = raw.match(
-        /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/
-      );
-      let d: Date;
-      if (match) {
-        const [, y, m, day, hh, mm, ss] = match;
-        const year = Number(y);
-        const monthIndex = Number(m) - 1;
-        const dateNum = Number(day);
-        const hour = Number(hh);
-        const minute = Number(mm);
-        const second = Number(ss);
-        const utcMs = Date.UTC(
-          year,
-          monthIndex,
-          dateNum,
-          hour,
-          minute,
-          second
-        );
-        // ชดเชยเวลาให้เป็นเวลาไทย (UTC+7) แล้วจึงดึงเฉพาะส่วนวันที่
-        d = new Date(utcMs + 7 * 60 * 60 * 1000);
-      } else {
-        d = new Date(raw);
-      }
-
-      if (Number.isNaN(d.getTime())) return null;
-
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, "0");
-      const dd = String(d.getDate()).padStart(2, "0");
-      return `${yyyy}-${mm}-${dd}`;
-    } catch {
-      return null;
-    }
+    return toBangkokDateString(raw);
   }
 
   useEffect(() => {

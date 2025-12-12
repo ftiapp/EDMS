@@ -6,6 +6,10 @@ const HR_LOGIN_URL = "https://employee-management-9yicp.kinsta.app/login";
 
 // ป้องกันไม่ให้เข้าระบบ EDMS โดยพิมพ์ URL ตรงโดยไม่มีข้อมูลที่ถูกต้องจากระบบพนักงาน
 export async function middleware(req: NextRequest) {
+  if (process.env.NODE_ENV === "development") {
+    return NextResponse.next();
+  }
+
   const url = req.nextUrl;
   const { pathname, searchParams } = url;
   const email = (searchParams.get("email") || "").trim();

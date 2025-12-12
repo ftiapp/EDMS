@@ -4,6 +4,7 @@ import Link from "next/link";
 import UserNavbar from "../components/UserNavbar";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useEffect, useState } from "react";
+import { toBangkokDateString } from "@/lib/datetime";
 
 const ALLOWED_DEPARTMENTS = [
   "ผู้อำนวยการใหญ่",
@@ -66,8 +67,7 @@ function EditDocumentPageInner() {
 
   useEffect(() => {
     const now = new Date();
-    const iso = now.toISOString();
-    const local = iso.slice(0, 10); // yyyy-MM-dd
+    const local = toBangkokDateString(now) ?? "";
     setCurrentDateTime(local);
     const base = now.toLocaleString("th-TH", {
       dateStyle: "medium",
@@ -177,9 +177,8 @@ function EditDocumentPageInner() {
     const editedAt = formData.get("editedAt");
     if (!editedAt) {
       const now = new Date();
-      const iso = now.toISOString();
-      const local = iso.slice(0, 10);
-      formData.set("editedAt", local);
+      const local = toBangkokDateString(now);
+      if (local) formData.set("editedAt", local);
     }
 
     const documentId = searchParams.get("id") ?? "";
