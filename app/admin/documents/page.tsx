@@ -243,7 +243,7 @@ export default function AdminDocumentsPage() {
 
         selectedFiles.forEach((f) => fileForm.append("files", f));
 
-        const fileRes = await fetch("/api/documents/update-files", {
+        const fileRes = await fetch("/api/admin/documents/update-files", {
           method: "POST",
           body: fileForm,
         });
