@@ -402,7 +402,7 @@ function DocumentDetailPageInner() {
                   <rect x="4" y="15" width="16" height="4" rx="1" />
                 </svg>
               </span>
-              <span className="tracking-wide">ดาวน์โหลดเอกสาร</span>
+              <span className="tracking-wide">ดาวน์โหลดเอกสารทั้งหมด</span>
             </button>
           </div>
 
